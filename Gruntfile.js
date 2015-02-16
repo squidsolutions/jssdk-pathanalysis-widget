@@ -25,12 +25,12 @@ module.exports = function(grunt) {
                     },
                     css : {
                         src : ['src/*.css' ],
-                        dest : 'dist/squid_api_flowchart-widget.css',
+                        dest : 'dist/squid_api_pathanalysis-widget.css',
                     },
                     js : {
                         src : [ 'build/templates.js',
                                 'src/*.js' ],
-                        dest : 'dist/squid_api_flowchart-widget.js',
+                        dest : 'dist/squid_api_pathanalysis-widget.js',
                     }
                 },
                 handlebars : {
