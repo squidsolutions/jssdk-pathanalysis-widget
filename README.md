@@ -1,0 +1,1 @@
+jssdk-pathanalysis-widget
