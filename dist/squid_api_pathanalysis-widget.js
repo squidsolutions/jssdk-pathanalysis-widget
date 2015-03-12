@@ -7,7 +7,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   
 
 
-  return "<div class='sq-loading' style='position:absolute; width:100%; top:40%;'>\n<div class=\"spinner\">\n  <div class=\"rect5\"></div>\n  <div class=\"rect4\"></div>\n  <div class=\"rect3\"></div>\n  <div class=\"rect2\"></div>\n  <div class=\"rect1\"></div>\n  <div class=\"rect2\"></div>\n  <div class=\"rect3\"></div>\n  <div class=\"rect4\"></div>\n  <div class=\"rect5\"></div>\n</div>\n</div>\n<div id=\"squid_api_pathanalysis_widget\">\n  <div class=\"pathanalysis_header\">\n    <div class=\"row\">\n      <div class=\"col-md-2\">\n        <div id=\"origin\">\n        </div>\n      </div>\n      <div id=\"switcher\" class=\"col-md-5\">\n      </div>\n      <div class=\"col-md-2\">\n      </div>\n    </div>\n  </div>\n	<div class=\"pathanalysis_diagram\">\n\n	</div>\n  <div class=\"pathanalysis_columns\">\n    <div class=\"col-md-1 column-header\">\n        <div class=\"col-md-6 percentage\">\n        Visit <br /> &nbsp;&nbsp;%\n        </div>\n        <div class=\"col-md-6 steptime\">\n        Average &nbsp;&nbsp;&nbsp;&nbsp;Path &nbsp;Steptime\n        </div>\n      </div>\n  </div>\n</div>";
+  return "<div class='sq-loading' style='position:absolute; width:100%; top:40%;'>\n<div class=\"spinner\">\n  <div class=\"rect5\"></div>\n  <div class=\"rect4\"></div>\n  <div class=\"rect3\"></div>\n  <div class=\"rect2\"></div>\n  <div class=\"rect1\"></div>\n  <div class=\"rect2\"></div>\n  <div class=\"rect3\"></div>\n  <div class=\"rect4\"></div>\n  <div class=\"rect5\"></div>\n</div>\n</div>\n<div id=\"squid_api_pathanalysis_widget\">\n  <div class=\"pathanalysis_header\">\n    <div class=\"row\">\n      <div class=\"col-md-2\">\n        <div id=\"origin\">\n        </div>\n      </div>\n      <div class=\"col-md-5\">\n      </div>\n      <div class=\"col-md-2\">\n      </div>\n    </div>\n    <div class=\"row stats\">\n      <i class=\"fa fa-clock-o\"></i> <span>Currently viewing top 5 paths</span>\n    </div>\n  </div>\n	<div class=\"pathanalysis_diagram\">\n\n	</div>\n  <div class=\"pathanalysis_columns\">\n    <div class=\"col-md-1 column-header\">\n        <div class=\"col-md-6\">\n        </div>\n        <div class=\"col-md-6 percentage\">\n        Visit <br /> &nbsp;&nbsp;%\n        </div>\n        <div class=\"col-md-6 steptime\">\n        Average &nbsp;&nbsp;&nbsp;&nbsp;Path &nbsp;Steptime\n        </div>\n      </div>\n  </div>\n</div>";
   });
 (function (root, factory) {
     root.squid_api.view.PathAnalysisView = factory(root.Backbone, root.squid_api, squid_api.template.squid_api_pathanalysis_widget);
@@ -66,7 +66,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
                 if (this.resizing) {
                     window.clearTimeout(resizing);
                 }
-                this.resizing = window.setTimeout(_.bind(this.renderDiagram(true),this), 100);
+                this.resizing = window.setTimeout(this.renderDiagram(true),this, 100);
             };
         },
 
@@ -302,7 +302,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
                     .attr('class', 'd3-tip animate')
                     .offset([-10, 0])
                     .html(function(d) {
-                        return "<span class='name'>Name: " + d.name.length === 0 ? "Unknown" : d.name + " </span><br /> <span class='time'>Time (MS) " + d.value + "</span><br /><span class='percentage'> Percentage: " + Math.round(d.y) + "</span>";
+                        return "<span class='name'>Name: " + d.name.length === 0 ? "Unknown" : d.name + " </span><br /> <span class='time'>Time (MS) " + d.value + "</span><br /><span class='percentage'> Percentage: " + Math.round(d.percentage) + "</span>";
                     });
 
                 this.svg.call(tip);

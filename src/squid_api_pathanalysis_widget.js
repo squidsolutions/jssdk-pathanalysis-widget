@@ -55,7 +55,7 @@
                 if (this.resizing) {
                     window.clearTimeout(resizing);
                 }
-                this.resizing = window.setTimeout(_.bind(this.renderDiagram(true),this), 100);
+                this.resizing = window.setTimeout(this.renderDiagram(true),this, 100);
             };
         },
 
@@ -291,7 +291,7 @@
                     .attr('class', 'd3-tip animate')
                     .offset([-10, 0])
                     .html(function(d) {
-                        return "<span class='name'>Name: " + d.name.length === 0 ? "Unknown" : d.name + " </span><br /> <span class='time'>Time (MS) " + d.value + "</span><br /><span class='percentage'> Percentage: " + Math.round(d.y) + "</span>";
+                        return "<span class='name'>Name: " + d.name.length === 0 ? "Unknown" : d.name + " </span><br /> <span class='time'>Time (MS) " + d.value + "</span><br /><span class='percentage'> Percentage: " + Math.round(d.percentage) + "</span>";
                     });
 
                 this.svg.call(tip);
