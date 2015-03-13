@@ -229,15 +229,10 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
         renderDiagram: function(resize) {
             var me = this;
             var data = this.getData();
-            var documentHeight = $(document).height() - 350;
+            var documentHeight = $(window).height() - 240;
             var width = this.$el.find(".pathanalysis_diagram").width();
-            var viewPortHeight;
-            if ($("#main-content .wrapper").length > 0) {
-                viewPortHeight = documentHeight;
-            } else {
-                viewPortHeight = 450;
-            }
             var headerWidth = this.$el.find(".pathanalysis_header").width();
+            this.$el.find(".pathanalysis_columns").height($(window).height() - 273);
             
             d3.select("#squid_api_pathanalysis_widget .pathanalysis_diagram svg").remove();
 
@@ -293,7 +288,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
                 this.svg = d3.select("#squid_api_pathanalysis_widget .pathanalysis_diagram")
                 .append("svg")
                 .attr("width", w + margin.left + margin.right)
-                .attr("height", viewPortHeight)
+                .attr("height", documentHeight)
                 .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -431,9 +426,6 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
                         } else {
                             name = "Unknown";
                         }
-                        // if (d.y > 1) {
-                            
-                        // }
                         return name;
                     })
                     .attr("x", function (d) {
@@ -576,17 +568,11 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
                                 .duration(1000)
                                 .ease('elastic');
                         } else {
-                            // var widthOfRect = d3.select(children[ix][0]).attr("width");
-                            // var lengthOfText = children[ix][1].getComputedTextLength();
-                            // if (lengthOfText > widthOfRect) {
-
-                            // }
                             d3.select(children[ix][0])
                                 .transition()
                                 .attr("y", yValue1)
                                 .duration(1000)
                                 .ease('elastic');
-                            // var previousXValue = d3.select(children[ix][1]).attr("x");
                             d3.select(children[ix][1])
                                 .transition()
                                 .attr("y", yValue1 + 30)
@@ -604,7 +590,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
             this.$el.show();
 
             // Starting Columns Height
-            this.$el.find(".pathanalysis_columns").height($(document).height() - 267);
+            this.$el.find(".pathanalysis_columns").height($(window).height() - 273);
 
             return this;
         }

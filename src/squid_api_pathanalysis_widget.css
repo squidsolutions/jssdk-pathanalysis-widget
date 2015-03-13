@@ -64,7 +64,6 @@
 #squid_api_pathanalysis_widget .pathanalysis_header {
   height: 61px;
   background: #fff;
-  margin-top: 1px;
   z-index: 0;
   position: relative;
 }
@@ -76,7 +75,7 @@
   z-index: 0;
   height: 100%;
   background: #fff;
-  top: 63px;
+  top: 62px;
 }
 
 #squid_api_pathanalysis_widget .pathanalysis_diagram {

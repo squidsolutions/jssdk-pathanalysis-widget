@@ -218,15 +218,10 @@
         renderDiagram: function(resize) {
             var me = this;
             var data = this.getData();
-            var documentHeight = $(document).height() - 350;
+            var documentHeight = $(window).height() - 240;
             var width = this.$el.find(".pathanalysis_diagram").width();
-            var viewPortHeight;
-            if ($("#main-content .wrapper").length > 0) {
-                viewPortHeight = documentHeight;
-            } else {
-                viewPortHeight = 450;
-            }
             var headerWidth = this.$el.find(".pathanalysis_header").width();
+            this.$el.find(".pathanalysis_columns").height($(window).height() - 273);
             
             d3.select("#squid_api_pathanalysis_widget .pathanalysis_diagram svg").remove();
 
@@ -282,7 +277,7 @@
                 this.svg = d3.select("#squid_api_pathanalysis_widget .pathanalysis_diagram")
                 .append("svg")
                 .attr("width", w + margin.left + margin.right)
-                .attr("height", viewPortHeight)
+                .attr("height", documentHeight)
                 .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -584,7 +579,7 @@
             this.$el.show();
 
             // Starting Columns Height
-            this.$el.find(".pathanalysis_columns").height($(document).height() - 267);
+            this.$el.find(".pathanalysis_columns").height($(window).height() - 273);
 
             return this;
         }
