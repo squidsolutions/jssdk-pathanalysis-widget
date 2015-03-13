@@ -218,20 +218,19 @@
         renderDiagram: function(resize) {
             var me = this;
             var data = this.getData();
-            var documentHeight = $(document).height() - 240;
+            var documentHeight = $(document).height() - 350;
             var width = this.$el.find(".pathanalysis_diagram").width();
             var viewPortHeight;
             if ($("#main-content .wrapper").length > 0) {
-                viewPortHeight = $("#main-content .wrapper").height() - 30;
+                viewPortHeight = documentHeight;
             } else {
                 viewPortHeight = 450;
             }
-            
             var headerWidth = this.$el.find(".pathanalysis_header").width();
             
             d3.select("#squid_api_pathanalysis_widget .pathanalysis_diagram svg").remove();
 
-            var margin = { top: 0, left: 23, right: 100, bottom: 0 };
+            var margin = { top: 0, left: 23, right: 165, bottom: 0 };
 
             var w = width - margin.left - margin.right;
             
@@ -441,7 +440,7 @@
                     .text(function(d) {
                         return Math.round(d.percentage) + "%";
                     })
-                    .attr("x", (width - margin.right) - 5)
+                    .attr("x", (width - margin.right) + 20)
                     .attr("y", 30)
                     .attr("fill", "#767676");
 
@@ -450,10 +449,10 @@
                     .append("text")
                     .text(function(d) {
                         if (d.average !== 0) {
-                            return Math.round(d.average * 100) / 100;
+                            return Math.round(d.average) + "s";
                         }
                     })
-                    .attr("x", (width - margin.right) + 25)
+                    .attr("x", (width - margin.right) + 88)
                     .attr("y", 30)
                     .attr("fill", "#767676");
             }

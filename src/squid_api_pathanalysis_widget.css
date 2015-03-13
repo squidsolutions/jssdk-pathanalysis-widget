@@ -71,7 +71,7 @@
 
 #squid_api_pathanalysis_widget .pathanalysis_columns {
   position: absolute;
-  width: 95px;
+  width: 145px;
   right: 0px;
   z-index: 0;
   height: 100%;
@@ -85,7 +85,8 @@
 }
 
 #squid_api_pathanalysis_widget .pathanalysis_diagram .data-column text {
-  font-size: 13px;
+    font-size: 13px;
+    font-weight: bold;
 }
 
 #squid_api_pathanalysis_widget svg {
@@ -106,7 +107,7 @@
 }
 
 #squid_api_pathanalysis_widget .column-header {
-  font-size: 10px;
+  font-size: 12px;
 }
 
 #squid_api_pathanalysis_widget .column-header div {
@@ -114,8 +115,8 @@
 }
 
 #squid_api_pathanalysis_widget .column-header div.percentage {
-  top: -35px;
-  left: -20px;
+  top: -48px;
+  left: -8px;
 }
 
 #squid_api_pathanalysis_widget .addbutton text {
@@ -172,8 +173,8 @@
 }
 
 #squid_api_pathanalysis_widget .column-header div.steptime {
-  top: -74px;
-  left: 11px;
+  top: -90px;
+  left: 50px;
 }
 
 #squid_api_pathanalysis_widget .stats {
