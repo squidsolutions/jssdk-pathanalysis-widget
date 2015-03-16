@@ -21,6 +21,9 @@
             if (options.total) {
                 this.total = options.total;
             }
+            if (options.steps) {
+                this.steps = options.steps;
+            }
             if (options.format) {
                 this.format = options.format;
             } else {
@@ -98,7 +101,7 @@
                 var columns = results.cols;
                 var rows = results.rows;
 
-                var stepsInserted = 4;
+                var stepsInserted = this.steps;
 
                 // Obtain Total Count From Total Analysis
                 var totalCount = this.total.get("analyses")[0].get("results").rows[0].v[0];
@@ -138,6 +141,7 @@
                         obj.realPercentage = 100;
                         obj.displayPercentage = 100;
                         obj.stepname = rowItem[0];
+                        obj.lastValue = true;
                         obj.time = 0;
                         dataValues.data.push(obj);
                     } else {
@@ -162,6 +166,15 @@
                                     obj.displayPercentage = obj.realPercentage;
                                 }
                                 percentages = percentages + obj.displayPercentage;
+
+                                if (rowItem[ix].length === 0 && ix === (noTimeCount * 2) - 1) {
+                                    obj.lastNoValue = true;
+                                }
+                                if (noTimeCount === 0 && ix === (stepsInserted * 2) - 1) {
+                                    obj.lastValue = true;
+                                } else if (ix === (stepsInserted * 2) - noTimeCount) {
+                                    obj.lastValue = true;
+                                }
 
                                 dataValues.data.push(obj);
                             }
@@ -188,7 +201,6 @@
                                 }
                                 newArray.push(manipObj);
                             }
-                            // dataValues.data.push(obj);
                         }
                     }
                     
@@ -218,10 +230,10 @@
         renderDiagram: function(resize) {
             var me = this;
             var data = this.getData();
-            var documentHeight = $(window).height() - 240;
+            var documentHeight = $(window).height() - 275;
             var width = this.$el.find(".pathanalysis_diagram").width();
             var headerWidth = this.$el.find(".pathanalysis_header").width();
-            this.$el.find(".pathanalysis_columns").height($(window).height() - 273);
+            this.$el.find(".pathanalysis_columns").height($(window).height() - 277);
             
             d3.select("#squid_api_pathanalysis_widget .pathanalysis_diagram svg").remove();
 
@@ -246,6 +258,16 @@
                     if (pathData[ix].percentage !== 0) {
                         obj.name = pathData[ix].stepname;
                         obj.value = pathData[ix].time;
+                        if (pathData[ix].lastNoValue) {
+                            obj.lastNoValue = pathData[ix].lastNoValue;
+                        } else {
+                            obj.lastNoValue = false;
+                        }
+                        if (pathData[ix].lastValue) {
+                            obj.lastValue = pathData[ix].lastValue;
+                        } else {
+                            obj.lastValue = false;
+                        }
                         obj.percentage = pathData[ix].realPercentage;
                         obj.y = pathData[ix].displayPercentage;
                         arr.push(obj);
@@ -362,12 +384,6 @@
                         return 0;
                     })
                     .attr("height", 50)
-                    .attr("rx", function(d, i) {
-                        return 0;
-                    })
-                    .attr("ry", function(d, i) {
-                        return 0;
-                    })
                     .style("fill", function (d, i) {
                         if (squid_api.view.metadata[d.name]) {
                             return squid_api.view.metadata[d.name].color;
@@ -411,7 +427,9 @@
                     .text(function(d) {
                         var name;
                         if (d.name.length > 0) {
-                            name = d.name;
+                            if (d.y > 1) {
+                                name = d.name;
+                            }
                         } else {
                             name = "Unknown";
                         }
@@ -579,7 +597,7 @@
             this.$el.show();
 
             // Starting Columns Height
-            this.$el.find(".pathanalysis_columns").height($(window).height() - 273);
+            this.$el.find(".pathanalysis_columns").height($(window).height() - 277);
 
             return this;
         }
