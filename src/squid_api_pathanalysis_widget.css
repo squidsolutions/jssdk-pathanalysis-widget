@@ -70,7 +70,7 @@
 
 #squid_api_pathanalysis_widget .pathanalysis_columns {
   position: absolute;
-  width: 145px;
+  width: 155px;
   right: 0px;
   z-index: 0;
   height: 100%;
@@ -84,8 +84,22 @@
 }
 
 #squid_api_pathanalysis_widget .pathanalysis_diagram .data-column text {
-    font-size: 13px;
-    font-weight: bold;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+#squid_api_pathanalysis_widget .pathanalysis_diagram .dataset text {
+  font-weight: bold;
+}
+
+#squid_api_pathanalysis_widget .pathanalysis_diagram .dataset text.small {
+  display: none;
+  fill: rgb(118, 118, 118);
+  color: gray;
+}
+
+#squid_api_pathanalysis_widget .pathanalysis_diagram .expanded .dataset text.small {
+  display: inherit;
 }
 
 #squid_api_pathanalysis_widget svg {

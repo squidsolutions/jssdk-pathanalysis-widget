@@ -7,6 +7,7 @@
         template : null,
         d3Formatter : null,
         jsonData : {},
+        modelOID : null,
 
         initialize: function(options) {
             var me = this;
@@ -89,8 +90,17 @@
                 this.$el.find(".sq-sankey").hide();
                 this.$el.find(".sq-loading").hide();
             } else {
-              this.$el.find(".sq-loading").hide();
-              this.renderDiagram();
+                this.$el.find(".sq-loading").hide();
+                // Set Model ID to avoid data refresh
+                if (! this.modelOID) {
+                    this.modelOID = this.model.get("oid");
+                    this.renderDiagram();
+                } else if (this.modelOID) {
+                    if (this.modelOID !== this.model.get("oid")) {
+                        this.renderDiagram();
+                        this.modelOID = this.model.get("oid");
+                    }
+                }
             }
         },
 
@@ -167,13 +177,10 @@
                                 }
                                 percentages = percentages + obj.displayPercentage;
 
-                                if (rowItem[ix].length === 0 && ix === (noTimeCount * 2) - 1) {
+                                if (rowItem[ix].length === 0 && rowItem[ix - stepsInserted] !== 0) {
                                     obj.lastNoValue = true;
-                                }
-                                if (noTimeCount === 0 && ix === (stepsInserted * 2) - 1) {
-                                    obj.lastValue = true;
-                                } else if (ix === (stepsInserted * 2) - noTimeCount) {
-                                    obj.lastValue = true;
+                                } else if (ix === (stepsInserted * 2) - (noTimeCount) - 1) {
+                                    obj.lastValue = true; 
                                 }
 
                                 dataValues.data.push(obj);
@@ -233,11 +240,14 @@
             var documentHeight = $(window).height() - 275;
             var width = this.$el.find(".pathanalysis_diagram").width();
             var headerWidth = this.$el.find(".pathanalysis_header").width();
-            this.$el.find(".pathanalysis_columns").height($(window).height() - 277);
+            var originalColumnsHeight = $(window).height() - 298;
+            $("#squid-widgets-wrapper").height($(window).height() - 93);
+            this.$el.find(".pathanalysis_columns").height(originalColumnsHeight);
+            this.$el.find(".pathanalysis_columns").attr("originalHeight", originalColumnsHeight);
             
             d3.select("#squid_api_pathanalysis_widget .pathanalysis_diagram svg").remove();
 
-            var margin = { top: 0, left: 23, right: 165, bottom: 0 };
+            var margin = { top: 0, left: 23, right: 175, bottom: 0 };
 
             var w = width - margin.left - margin.right;
             
@@ -300,6 +310,7 @@
                 .append("svg")
                 .attr("width", w + margin.left + margin.right)
                 .attr("height", documentHeight)
+                .attr("originalHeight", documentHeight)
                 .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -307,7 +318,16 @@
                     .attr('class', 'd3-tip animate')
                     .offset([-10, 0])
                     .html(function(d) {
-                        return "<span class='name'>Name: " + d.name.length === 0 ? "Unknown" : d.name + " </span><br /> <span class='time'>Time (MS) " + d.value + "</span><br /><span class='percentage'> Percentage: " + Math.round(d.percentage) + "</span>";
+                        if (d.value < 60) {
+                            if (d.value === 0) {
+                                return "<span class='name'>Name: " + d.name.length === 0 ? "Unknown" : d.name + " </span><br /><br /> <span class='time'>Time: N/A </span><br /><br /><span class='percentage'>Step % (path) : " + Math.round(d.percentage) + "%</span>";
+                            }
+                            return "<span class='name'>Name: " + d.name.length === 0 ? "Unknown" : d.name + " </span><br /><br /> <span class='time'>Time: " + Math.round(d.value) + "s</span><br /><br /><span class='percentage'>Step % (path) : " + Math.round(d.percentage) + "%</span>";
+                        } else {
+                            var minutes = Math.floor(d.value / 60);
+                            var seconds = Math.floor(d.value - minutes * 60);
+                            return "<span class='name'>Name: " + d.name.length === 0 ? "Unknown" : d.name + " </span><br /><br /> <span class='time'>Time: " + minutes + "m " + seconds + "s" + "</span><br /><br /><span class='percentage'>Step % (path) : " + Math.round(d.percentage) + "%</span>";
+                        }
                     });
 
                 this.svg.call(tip);
@@ -319,6 +339,7 @@
                 var topLevelGroup = groupOfGroups
                     .append("g")
                     .attr("class", "toplevel")
+                    .attr("firstYPosition", function(d, i ) {return (i * 75); })
                     .attr("transform", function(d, i ) {return "translate(0, " + (i * 75) + ")"; });   
         
                 // Append add icon for each path
@@ -369,8 +390,8 @@
                     .attr("class", "dataset");
 
                 // Add a rect for each data value
-                var rects = groups.selectAll("rect")
-                    .data(function (d) {
+                var stepElements = groups.selectAll("rect")
+                    .data(function (d, i) {
                         return d;
                     })
                     .enter()
@@ -383,6 +404,13 @@
                     .attr("y", function(d, i) {
                         return 0;
                     })
+                    .attr("fill-opacity", function(d, i) {
+                        if (d.lastNoValue) {
+                            return 0.2;
+                        } else if (d.lastValue) {
+                            return 1;
+                        }
+                    })
                     .attr("height", 50)
                     .style("fill", function (d, i) {
                         if (squid_api.view.metadata[d.name]) {
@@ -393,7 +421,7 @@
                     });
                 
                 if (! resize) {
-                    var transition = rects
+                    var transition = stepElements
                         .transition()
                         .attr('x', function(d) { 
                             return xScale(d.y0);
@@ -401,13 +429,13 @@
                         .delay(function(d, i) {
                             return i * 20;
                         })
-                        .duration(1000)
+                        .duration(500)
                         .ease('exp')
                         .attr("width", function (d) {
                             return xScale(d.y);
                         });
                 } else {
-                    var xPosition = rects
+                    var xPosition = stepElements
                         .attr('x', function(d) { 
                             return xScale(d.y0);
                         })
@@ -415,10 +443,10 @@
                             return xScale(d.y);
                         });
                 }
-                
 
                 // Add text for each data value
-                var texts = groups.selectAll("text")
+                setTimeout(function() {
+                    var texts = groups.selectAll("text")
                     .data(function (d) {
                         return d;
                     })
@@ -427,22 +455,40 @@
                     .text(function(d) {
                         var name;
                         if (d.name.length > 0) {
-                            if (d.y > 1) {
-                                name = d.name;
-                            }
+                            name = d.name;
                         } else {
                             name = "Unknown";
                         }
                         return name;
                     })
                     .attr("x", function (d) {
-                        return xScale(d.y0) + (xScale(d.y)) / 2.2;
+                        var value;
+                        var svgSize = d3.select(".pathanalysis_diagram svg").attr("width") - 250;
+                        var nodeSizing = this.parentNode.childNodes[0].getBoundingClientRect();
+                        if (this.getBBox().width > nodeSizing.width) {
+                            if (xScale(d.y0) + (xScale(d.y)) > svgSize) {
+                                return xScale(d.y0) - this.getBBox().width - 10;
+                            } else {
+                                return xScale(d.y0) + nodeSizing.width + 10;
+                            }
+                        } else {
+                            return xScale(d.y0) + (nodeSizing.width / 2) - (this.getBBox().width / 2);
+                        }
+                    })
+                    .attr("class", function (d) {
+                        var nodeSizing = this.parentNode.childNodes[0].getBoundingClientRect();
+                        if (this.getBBox().width > nodeSizing.width) {
+                            return "small";
+                        }
                     })
                     .attr("y", function (d) {
                         return 30;
                     })
-                    .attr("fill", "white");
-
+                    .attr("fill", function (d) {
+                        return "white";
+                    });
+                }, 500); 
+                
                 // Add Column Data
                 var columnDataGroup = topLevelGroup.append("g")
                     .attr("class", "data-column");
@@ -462,10 +508,17 @@
                     .append("text")
                     .text(function(d) {
                         if (d.average !== 0) {
+                            if (d.average < 60) {
+                                return  Math.floor(d.average / 60);
+                            } else {
+                                var minutes = Math.floor(d.average / 60);
+                                var seconds = Math.floor(d.average - minutes * 60);
+                                return minutes + "m " + seconds + "s";
+                            }
                             return Math.round(d.average) + "s";
                         }
                     })
-                    .attr("x", (width - margin.right) + 88)
+                    .attr("x", (width - margin.right) + 77)
                     .attr("y", 30)
                     .attr("fill", "#767676");
             }
@@ -491,102 +544,105 @@
                 children.push(nodesToAnimate[i].children);
             }
 
-            /* Count number of children so we know how far to move the
-                nodes benieth
-            */ 
-
             // Get All Nodes after one being clicked
-            var nodeAfter = $(siblings[0]).parent(".toplevel").nextAll();
+            var nodeAfter = $(siblings[0]).parent().nextAll();
             if (children.length > 2) {
+                // If node has more than 2 nodes
+                var svgHeight = parseInt(d3.select("#squid_api_pathanalysis_widget svg").attr("height"));
+                var widgetsWrapperHeight = $("#squid-widgets-wrapper").height();
+                var columnsHeight = $("#squid_api_pathanalysis_widget .pathanalysis_columns").height();
+                var originalColumnsHeight = $("#squid_api_pathanalysis_widget .pathanalysis_columns").attr("originalHeight");
+                var entitiesHeight = 0;
                 if (this.hasAttribute("expanded")) {
+                    // If it is expanded
+                    d3.select(this).select('text')
+                        .text(function(d){
+                             return "+";
+                        });
                     d3.select(this).attr("expanded", null);
-
+                    d3.select(this.parentNode).attr("class", null);
+                    // Place nodes after back into position in regards to previous node
                     for (i=0; i<nodeAfter.length; i++) {
                         var previousYValue = parseInt(d3.select(nodeAfter[i]).attr("previousYValue"));
-                        var newYValue = previousYValue;
-                        if (children.length !== 1) {
-                            newYValue = previousYValue + (children.length * 50);
-                        }
-                        d3.select(nodeAfter[i])
-                            .transition()
-                            .attr('transform', "translate(0," + previousYValue + ")")
-                            .duration(1000)
-                            .ease('elastic');
+                        var currentNodeTranslate = d3.transform(d3.select(nodeAfter[i]).attr("transform")).translate[1];
+                            var newYValue = currentNodeTranslate - (children.length * 50);
+                            d3.select(nodeAfter[i])
+                                .transition()
+                                .attr('transform', "translate(0," + newYValue + ")")
+                                .duration(500)
+                                .ease('esp');
                     }
-
-                    // Animate Row
+                    entitiesHeight = 0;
+                    // Place expanded nodes back into straight line position
                     for (ix=0; ix<children.length; ix++) {
                         var yValue = 50 * ix;
-                        // Check whether we have Rect then text or text/text nodes
+                        // Only animate node sets of rect & text, not text & text
                         if ($(children[ix][0])[0].tagName === "text" && $(children[ix][1])[0].tagName === "text") {
-                            d3.select(children[ix][0])
-                                    .transition()
-                                    .attr("y", 30)
-                                    .duration(1000)
-                                    .ease('elastic');
-                            d3.select(children[ix][1])
-                                    .transition()
-                                    .attr("y", 30)
-                                    .duration(1000)
-                                    .ease('elastic');
                         } else {
+                            
+                            entitiesHeight = entitiesHeight + 50;
                             d3.select(children[ix][0])
                                 .transition()
                                 .attr("y", 0)
-                                .duration(1000)
-                                .ease('elastic');
+                                .duration(500)
+                                .ease('esp');
                             d3.select(children[ix][1])
                                 .transition()
                                 .attr("y", 30)
-                                .duration(1000)
-                                .ease('elastic');
+                                .duration(500)
+                                .ease('esp');
                         }
                     }
+                    // Page Height Logic on node collapose
+                    d3.select("#squid_api_pathanalysis_widget svg").attr("height", svgHeight - entitiesHeight - 50);
+                    $("#squid-widgets-wrapper").height(widgetsWrapperHeight - entitiesHeight - 50);
+                    $("#squid_api_pathanalysis_widget .pathanalysis_columns").height(columnsHeight - entitiesHeight - 50);
                 } else {
+                    // Expand Node Clicked
+                    d3.select(this).select('text')
+                        .text(function(d){
+                             return " -";
+                        });
+                    // Add expanded classes / attributes
                     d3.select(this).attr("expanded", true);
+                    d3.select(this.parentNode).attr("class", "expanded");
 
+                    // Collapose Nodes After
                     for (i=0; i<nodeAfter.length; i++) {
                         var previousYValue1 = d3.transform(d3.select(nodeAfter[i]).attr("transform")).translate[1];
-                        var newYValue1 = previousYValue1;
-                        if (children.length !== 1) {
-                            newYValue1 = previousYValue1 + (children.length * 50);
-                        }
+                        var newYValue1 = previousYValue1 + (children.length * 50);
                         d3.select(nodeAfter[i])
-                            .attr("previousYValue", previousYValue1)
                             .transition()
                             .attr('transform', "translate(0," + newYValue1 + ")")
-                            .duration(1000)
-                            .ease('elastic');
+                            .duration(500)
+                            .ease('esp');
                     }
-
+                    entitiesHeight = 0;
                     // Animate Row
                     for (ix=0; ix<children.length; ix++) {
                         var yValue1 = 50 * ix;
                         // Check whether we have Rect then text or text/text nodes
                         if ($(children[ix][0])[0].tagName === "text" && $(children[ix][1])[0].tagName === "text") {
-                            d3.select(children[ix][0])
-                                .transition()
-                                .attr("y", yValue1 - 20)
-                                .duration(1000)
-                                .ease('elastic');
-                            d3.select(children[ix][1])
-                                .transition()
-                                .attr("y", yValue1 - 20)
-                                .duration(1000)
-                                .ease('elastic');
+                            // Logic for Text Column Nodes
                         } else {
+                            // Expand nodes, each one add 50 pixels
+                            entitiesHeight = entitiesHeight + 50;
                             d3.select(children[ix][0])
                                 .transition()
                                 .attr("y", yValue1)
-                                .duration(1000)
-                                .ease('elastic');
+                                .duration(500)
+                                .ease('esp');
                             d3.select(children[ix][1])
                                 .transition()
                                 .attr("y", yValue1 + 30)
-                                .duration(1000)
-                                .ease('elastic');
+                                .duration(500)
+                                .ease('esp');
                         }
                     }
+                    // Expanding dom manipulation
+                    d3.select("#squid_api_pathanalysis_widget svg").attr("height", svgHeight + entitiesHeight + 50);
+                    $("#squid-widgets-wrapper").height(widgetsWrapperHeight + entitiesHeight + 50);
+                    $("#squid_api_pathanalysis_widget .pathanalysis_columns").height(columnsHeight + entitiesHeight + 50);
                 }
             }
         },
@@ -597,7 +653,7 @@
             this.$el.show();
 
             // Starting Columns Height
-            this.$el.find(".pathanalysis_columns").height($(window).height() - 277);
+            this.$el.find(".pathanalysis_columns").height($(window).height() - 278);
 
             return this;
         }
