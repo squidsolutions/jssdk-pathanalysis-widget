@@ -18,6 +18,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
         template : null,
         d3Formatter : null,
         jsonData : {},
+        animating: false,
         modelOID : null,
 
         initialize: function(options) {
@@ -190,7 +191,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
 
                                 if (rowItem[ix].length === 0 && rowItem[ix - stepsInserted] !== 0) {
                                     obj.lastNoValue = true;
-                                } else if (ix === (stepsInserted * 2) - (noTimeCount) - 1) {
+                                } else if (ix === (stepsInserted * 2) - 1) {
                                     obj.lastValue = true; 
                                 }
 
@@ -357,7 +358,15 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
                 var addIconGroup = topLevelGroup
                     .append("g")
                     .attr("class", "addbutton")
-                    .on("click", this.waterFall);
+                    .on("click", function() {
+                        if (! me.animating) {
+                            me.waterFall(this);
+                            me.animating = true;
+                            setTimeout(function() {
+                                me.animating = false;
+                            }, 500);
+                        }
+                    });
 
                 var addIconRectangle = addIconGroup
                     .append("rect")
@@ -415,13 +424,6 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
                     .attr("y", function(d, i) {
                         return 0;
                     })
-                    .attr("fill-opacity", function(d, i) {
-                        if (d.lastNoValue) {
-                            return 0.2;
-                        } else if (d.lastValue) {
-                            return 1;
-                        }
-                    })
                     .attr("height", 50)
                     .style("fill", function (d, i) {
                         if (squid_api.view.metadata[d.name]) {
@@ -430,30 +432,6 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
                             return "rgb(46,110,165)";
                         }
                     });
-                
-                if (! resize) {
-                    var transition = stepElements
-                        .transition()
-                        .attr('x', function(d) { 
-                            return xScale(d.y0);
-                        })
-                        .delay(function(d, i) {
-                            return i * 20;
-                        })
-                        .duration(500)
-                        .ease('exp')
-                        .attr("width", function (d) {
-                            return xScale(d.y);
-                        });
-                } else {
-                    var xPosition = stepElements
-                        .attr('x', function(d) { 
-                            return xScale(d.y0);
-                        })
-                        .attr("width", function (d) {
-                            return xScale(d.y);
-                        });
-                }
 
                 // Add text for each data value
                 setTimeout(function() {
@@ -498,7 +476,26 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
                     .attr("fill", function (d) {
                         return "white";
                     });
-                }, 500); 
+                }, 500);
+
+                var rightRoundedRect = function(x, y, w, h, r, tl, tr, bl, br) {
+                    var retval;
+                    retval  = "M" + (x + r) + "," + y;
+                    retval += "h" + (w - 2*r);
+                    if (tr) { retval += "a" + r + "," + r + " 0 0 1 " + r + "," + r; }
+                    else { retval += "h" + r; retval += "v" + r; }
+                    retval += "v" + (h - 2*r);
+                    if (br) { retval += "a" + r + "," + r + " 0 0 1 " + -r + "," + r; }
+                    else { retval += "v" + r; retval += "h" + -r; }
+                    retval += "h" + (2*r - w);
+                    if (bl) { retval += "a" + r + "," + r + " 0 0 1 " + -r + "," + -r; }
+                    else { retval += "h" + -r; retval += "v" + -r; }
+                    retval += "v" + (2*r - h);
+                    if (tl) { retval += "a" + r + "," + r + " 0 0 1 " + r + "," + -r; }
+                    else { retval += "v" + -r; retval += "h" + r; }
+                    retval += "z";
+                    return retval;
+                };
                 
                 // Add Column Data
                 var columnDataGroup = topLevelGroup.append("g")
@@ -532,11 +529,88 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
                     .attr("x", (width - margin.right) + 77)
                     .attr("y", 30)
                     .attr("fill", "#767676");
+
+                var paths = groups.selectAll("path")
+                    .data(function (d) {
+                        return d;
+                    })
+                    .enter()
+                    .append("path")
+                    .filter(function(d) {
+                        if (d.lastNoValue === true) {
+                            return d.lastNoValue;
+                        } else if (d.lastValue === true) { 
+                            return d.lastValue;
+                        }  else {
+                            this.remove();
+                        }
+                    })
+                    .attr("d", function(d) {
+                        if (d.lastNoValue) {
+                            return "m" + (xScale(d.y0) + xScale(d.y) + 3) +"," + 0 + "l  -8 5 l 8 5 l -8 5 l 8 5 l -8 5 l 8 5 l -8 5 l 8 5 l -8 5 l 8 5";
+                        } else if (d.lastValue) {
+                            // In the format of x, y, w, h, r, tl, tr, bl, br
+                            return rightRoundedRect(xScale(d.y0) + xScale(d.y), 0, 10, 50, 12, 0, 50, 0, 50);
+                        }
+                    })
+                    .attr("translate", function(d) {
+                        if (d.lastNoValue) {
+                            return "rotate(-35.751678466796875 241.31463623046886,108.94650268554689)";
+                        }
+                    })
+                    .style({"display": "none"});
+
+                if (! resize) {
+                    var transition = stepElements
+                        .transition()
+                        .attr('x', function(d) { 
+                            return xScale(d.y0);
+                        })
+                        .delay(function(d, i) {
+                            return i * 20;
+                        })
+                        .duration(500)
+                        .ease('exp')
+                        .attr("width", function (d) {
+                            return xScale(d.y);
+                        });
+                    setTimeout(function() {
+                        var pathsResize = paths
+                            .style({"display": "inherit"})
+                            .style("fill", function (d,i) {
+                                if (d.lastNoValue) {
+                                    return "#f1f1f8";
+                                }
+                                else if (d.lastValue) {
+                                    return squid_api.view.metadata[d.name].color;
+                                }
+                            });
+                    }, 500);
+                } else {
+                    var xPosition = stepElements
+                        .attr('x', function(d) { 
+                            return xScale(d.y0);
+                        })
+                        .attr("width", function (d) {
+                            return xScale(d.y);
+                        });
+                    var pathsResize = paths
+                        .style({"display": "inherit"});
+                    var pathNoTransition = paths
+                        .style("fill", function (d,i) {
+                            if (d.lastNoValue) {
+                                return "#f1f1f8";
+                            }
+                            else if (d.lastValue) {
+                                return squid_api.view.metadata[d.name].color;
+                            }
+                        });
+                }
             }
         },
 
         waterFall: function(node) {
-            var siblings = this.parentNode.children;
+            var siblings = node.parentNode.children;
             var nodesToAnimate = [];
 
             // Store Siblings
@@ -564,14 +638,14 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
                 var columnsHeight = $("#squid_api_pathanalysis_widget .pathanalysis_columns").height();
                 var originalColumnsHeight = $("#squid_api_pathanalysis_widget .pathanalysis_columns").attr("originalHeight");
                 var entitiesHeight = 0;
-                if (this.hasAttribute("expanded")) {
+                if (node.hasAttribute("expanded")) {
                     // If it is expanded
-                    d3.select(this).select('text')
+                    d3.select(node).select('text')
                         .text(function(d){
                              return "+";
                         });
-                    d3.select(this).attr("expanded", null);
-                    d3.select(this.parentNode).attr("class", null);
+                    d3.select(node).attr("expanded", null);
+                    d3.select(node.parentNode).attr("class", null);
                     // Place nodes after back into position in regards to previous node
                     for (i=0; i<nodeAfter.length; i++) {
                         var previousYValue = parseInt(d3.select(nodeAfter[i]).attr("previousYValue"));
@@ -589,8 +663,14 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
                         var yValue = 50 * ix;
                         // Only animate node sets of rect & text, not text & text
                         if ($(children[ix][0])[0].tagName === "text" && $(children[ix][1])[0].tagName === "text") {
+                        } else if($(children[ix][0])[0].tagName === "rect" && $(children[ix][1])[0].tagName === "path" && $(children[ix][2])[0].tagName === "text") {
+                            entitiesHeight = entitiesHeight + 50;
+                            d3.select(children[ix][0].parentNode)
+                                .transition()
+                                .attr('transform', "translate(0 " + 0 + ")")
+                                .duration(500)
+                                .ease('esp');
                         } else {
-                            
                             entitiesHeight = entitiesHeight + 50;
                             d3.select(children[ix][0])
                                 .transition()
@@ -610,13 +690,13 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
                     $("#squid_api_pathanalysis_widget .pathanalysis_columns").height(columnsHeight - entitiesHeight - 50);
                 } else {
                     // Expand Node Clicked
-                    d3.select(this).select('text')
+                    d3.select(node).select('text')
                         .text(function(d){
                              return " -";
                         });
                     // Add expanded classes / attributes
-                    d3.select(this).attr("expanded", true);
-                    d3.select(this.parentNode).attr("class", "expanded");
+                    d3.select(node).attr("expanded", true);
+                    d3.select(node.parentNode).attr("class", "expanded");
 
                     // Collapose Nodes After
                     for (i=0; i<nodeAfter.length; i++) {
@@ -634,9 +714,16 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
                         var yValue1 = 50 * ix;
                         // Check whether we have Rect then text or text/text nodes
                         if ($(children[ix][0])[0].tagName === "text" && $(children[ix][1])[0].tagName === "text") {
-                            // Logic for Text Column Nodes
+                            // Logic for order rect / path / text
+                        } else if($(children[ix][0])[0].tagName === "rect" && $(children[ix][1])[0].tagName === "path" && $(children[ix][2])[0].tagName === "text") {
+                            entitiesHeight = entitiesHeight + 50;
+                            d3.select(children[ix][0].parentNode)
+                                .transition()
+                                .attr('transform', "translate(0 " + yValue1 + ")")
+                                .duration(500)
+                                .ease('esp');
                         } else {
-                            // Expand nodes, each one add 50 pixels
+                            // order for all other tag orders
                             entitiesHeight = entitiesHeight + 50;
                             d3.select(children[ix][0])
                                 .transition()
