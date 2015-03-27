@@ -322,8 +322,13 @@
                         if (d.value < 60) {
                             if (d.value === 0) {
                                 return "<span class='name'>Name: " + d.name.length === 0 ? "Unknown" : d.name + " </span><br /><br /> <span class='time'>Time: N/A </span><br /><br /><span class='percentage'>Step % (path) : " + Math.round(d.percentage) + "%</span>";
+                            } else {
+                                var value = d.value;
+                                if (value < 1) {
+                                    value = d.value.toFixed(2);
+                                }
+                                return "<span class='name'>Name: " + d.name.length === 0 ? "Unknown" : d.name + " </span><br /><br /> <span class='time'>Time: " + value + "s</span><br /><br /><span class='percentage'>Step % (path) : " + Math.round(d.percentage) + "%</span>";
                             }
-                            return "<span class='name'>Name: " + d.name.length === 0 ? "Unknown" : d.name + " </span><br /><br /> <span class='time'>Time: " + Math.round(d.value) + "s</span><br /><br /><span class='percentage'>Step % (path) : " + Math.round(d.percentage) + "%</span>";
                         } else {
                             var minutes = Math.floor(d.value / 60);
                             var seconds = Math.floor(d.value - minutes * 60);
@@ -418,7 +423,7 @@
                         if (squid_api.view.metadata[d.name]) {
                             return squid_api.view.metadata[d.name].color;
                         } else {
-                            return "rgb(46,110,165)";
+                            return "#000";
                         }
                     });
 
@@ -466,25 +471,6 @@
                         return "white";
                     });
                 }, 500);
-
-                var rightRoundedRect = function(x, y, w, h, r, tl, tr, bl, br) {
-                    var retval;
-                    retval  = "M" + (x + r) + "," + y;
-                    retval += "h" + (w - 2*r);
-                    if (tr) { retval += "a" + r + "," + r + " 0 0 1 " + r + "," + r; }
-                    else { retval += "h" + r; retval += "v" + r; }
-                    retval += "v" + (h - 2*r);
-                    if (br) { retval += "a" + r + "," + r + " 0 0 1 " + -r + "," + r; }
-                    else { retval += "v" + r; retval += "h" + -r; }
-                    retval += "h" + (2*r - w);
-                    if (bl) { retval += "a" + r + "," + r + " 0 0 1 " + -r + "," + -r; }
-                    else { retval += "h" + -r; retval += "v" + -r; }
-                    retval += "v" + (2*r - h);
-                    if (tl) { retval += "a" + r + "," + r + " 0 0 1 " + r + "," + -r; }
-                    else { retval += "v" + -r; retval += "h" + r; }
-                    retval += "z";
-                    return retval;
-                };
                 
                 // Add Column Data
                 var columnDataGroup = topLevelGroup.append("g")
@@ -494,7 +480,11 @@
                 var visitPercentage = columnDataGroup
                     .append("text")
                     .text(function(d) {
-                        return Math.round(d.percentage) + "%";
+                        if (d.percentage < 1) {
+                            return (d.percentage).toFixed(2) + "%";
+                        } else {
+                            return Math.round(d.percentage) + "%";
+                        }
                     })
                     .attr("x", (width - margin.right) + 20)
                     .attr("y", 30)
@@ -536,15 +526,15 @@
                     })
                     .attr("d", function(d) {
                         if (d.lastNoValue) {
-                            return "m" + (xScale(d.y0) + xScale(d.y) + 3) +"," + 0 + "l  -8 5 l 8 5 l -8 5 l 8 5 l -8 5 l 8 5 l -8 5 l 8 5 l -8 5 l 8 5";
+                            return "m" + (xScale(d.y0) + xScale(d.y) + 5) +"," + 0 + "c0,0 0,0 0,50c0";
                         } else if (d.lastValue) {
-                            // In the format of x, y, w, h, r, tl, tr, bl, br
-                            return rightRoundedRect(xScale(d.y0) + xScale(d.y), 0, 10, 50, 12, 0, 50, 0, 50);
+                            return "m" + (xScale(d.y0) + xScale(d.y) + 5) +"," + 0 + "c0,0 0,0 0,50c0";
                         }
                     })
-                    .attr("translate", function(d) {
-                        if (d.lastNoValue) {
-                            return "rotate(-35.751678466796875 241.31463623046886,108.94650268554689)";
+                    .attr("stroke-width", 2.5)
+                    .attr("stroke-dasharray", function(d) {
+                        if (d.lastValue) {
+                            return "8, 6, 8, 6";
                         }
                     })
                     .style({"display": "none"});
@@ -566,12 +556,11 @@
                     setTimeout(function() {
                         var pathsResize = paths
                             .style({"display": "inherit"})
-                            .style("fill", function (d,i) {
-                                if (d.lastNoValue) {
-                                    return "#f1f1f8";
-                                }
-                                else if (d.lastValue) {
+                            .attr("stroke", function (d,i) {
+                                if (squid_api.view.metadata[d.name]) {
                                     return squid_api.view.metadata[d.name].color;
+                                } else {
+                                    return "#000";
                                 }
                             });
                     }, 500);
@@ -586,12 +575,12 @@
                     var pathsResize = paths
                         .style({"display": "inherit"});
                     var pathNoTransition = paths
-                        .style("fill", function (d,i) {
-                            if (d.lastNoValue) {
-                                return "#f1f1f8";
-                            }
-                            else if (d.lastValue) {
+                        .attr("stroke", function (d,i) {
+                            if (squid_api.view.metadata[d.name]) {
                                 return squid_api.view.metadata[d.name].color;
+                            }
+                            else {
+                                return "#000";
                             }
                         });
                 }
