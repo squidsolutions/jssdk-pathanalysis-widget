@@ -9,6 +9,7 @@
         jsonData : {},
         animating: false,
         modelOID : null,
+        orderByView : null,
 
         initialize: function(options) {
             var me = this;
@@ -19,6 +20,9 @@
                 this.template = options.template;
             } else {
                 this.template = template;
+            }
+            if (options.orderByView) {
+                this.orderByView = options.orderByView;
             }
             if (options.total) {
                 this.total = options.total;
@@ -222,7 +226,7 @@
                 var dataSorted = this.sortByPercentage(objects);
 
                 // Take the first five records
-                var data = dataSorted.slice(0, 5);
+                var data = dataSorted.slice(0, 7);
 
                 return data;
             }
@@ -256,335 +260,354 @@
             // Format Data for Display
             var formattedArray = [];
             var collectionArray = [];
-
-            for (i=0; i<data.length; i++) {
-                var pathData = data[i].data;
-                var path={};
-                path.average = data[i].average;
-                path.percentage = data[i].percentage;
-                path.values = [];
-                for (ix=0; ix<pathData.length; ix++) {
-                    var arr = [];
-                    var obj = {};
-                    if (pathData[ix].percentage !== 0) {
-                        obj.name = pathData[ix].stepname;
-                        obj.value = pathData[ix].time;
-                        if (pathData[ix].lastNoValue) {
-                            obj.lastNoValue = pathData[ix].lastNoValue;
-                        } else {
-                            obj.lastNoValue = false;
-                        }
-                        if (pathData[ix].lastValue) {
-                            obj.lastValue = pathData[ix].lastValue;
-                        } else {
-                            obj.lastValue = false;
-                        }
-                        obj.percentage = pathData[ix].realPercentage;
-                        obj.y = pathData[ix].displayPercentage;
-                        arr.push(obj);
-                        path.values.push(arr);
-                    }
-                }
-                formattedArray.push(path);
-            }
-
-            //Set up stack method
-            var stack = d3.layout.stack();
-
-            //Data, stacked
-            formattedArray.forEach(function (dataset) {stack(dataset.values); });
-
-            //Set up scales
-            var xScale = d3.scale.linear()
-                .domain([0, d3.max(formattedArray, function (dataset) {      
-                    return d3.max(dataset.values, function (d) {
-                        return d3.max(d, function (d) {
-                            return d.y0 + d.y;
-                        });
-                    });
-                })])
-            .range([0, w]);
-
-            //Create SVG element
-            if (this.$el.find("#squid_api_pathanalysis_widget .pathanalysis_diagram").length > 0) {
-                this.svg = d3.select("#squid_api_pathanalysis_widget .pathanalysis_diagram")
-                .append("svg")
-                .attr("width", w + margin.left + margin.right)
-                .attr("height", documentHeight)
-                .attr("originalHeight", documentHeight)
-                .append("g")
-                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-                var tip = d3.tip()
-                    .attr('class', 'd3-tip animate')
-                    .offset([-10, 0])
-                    .html(function(d) {
-                        if (d.value < 60) {
-                            if (d.value === 0) {
-                                return "<span class='name'>Name: " + d.name.length === 0 ? "Unknown" : d.name + " </span><br /><br /> <span class='time'>Time: N/A </span><br /><br /><span class='percentage'>Step % (path) : " + Math.round(d.percentage) + "%</span>";
+            if (data) {
+                for (i=0; i<data.length; i++) {
+                    var pathData = data[i].data;
+                    var path={};
+                    path.average = data[i].average;
+                    path.percentage = data[i].percentage;
+                    path.values = [];
+                    for (ix=0; ix<pathData.length; ix++) {
+                        var arr = [];
+                        var obj = {};
+                        if (pathData[ix].percentage !== 0) {
+                            obj.name = pathData[ix].stepname;
+                            obj.value = pathData[ix].time;
+                            if (pathData[ix].lastNoValue) {
+                                obj.lastNoValue = pathData[ix].lastNoValue;
                             } else {
-                                var value = d.value;
-                                if (value < 1) {
-                                    value = d.value.toFixed(2);
-                                }
-                                return "<span class='name'>Name: " + d.name.length === 0 ? "Unknown" : d.name + " </span><br /><br /> <span class='time'>Time: " + value + "s</span><br /><br /><span class='percentage'>Step % (path) : " + Math.round(d.percentage) + "%</span>";
+                                obj.lastNoValue = false;
                             }
-                        } else {
-                            var minutes = Math.floor(d.value / 60);
-                            var seconds = Math.floor(d.value - minutes * 60);
-                            return "<span class='name'>Name: " + d.name.length === 0 ? "Unknown" : d.name + " </span><br /><br /> <span class='time'>Time: " + minutes + "m " + seconds + "s" + "</span><br /><br /><span class='percentage'>Step % (path) : " + Math.round(d.percentage) + "%</span>";
+                            if (pathData[ix].lastValue) {
+                                obj.lastValue = pathData[ix].lastValue;
+                            } else {
+                                obj.lastValue = false;
+                            }
+                            obj.percentage = pathData[ix].realPercentage;
+                            obj.y = pathData[ix].displayPercentage;
+                            arr.push(obj);
+                            path.values.push(arr);
                         }
-                    });
+                    }
+                    formattedArray.push(path);
+                }
 
-                this.svg.call(tip);
+                //Set up stack method
+                var stack = d3.layout.stack();
 
-                var groupOfGroups = this.svg.selectAll("g.toplevel")
-                    .data(formattedArray)
-                    .enter();
+                //Data, stacked
+                formattedArray.forEach(function (dataset) {stack(dataset.values); });
 
-                var topLevelGroup = groupOfGroups
+                //Set up scales
+                var xScale = d3.scale.linear()
+                    .domain([0, d3.max(formattedArray, function (dataset) {      
+                        return d3.max(dataset.values, function (d) {
+                            return d3.max(d, function (d) {
+                                return d.y0 + d.y;
+                            });
+                        });
+                    })])
+                .range([0, w]);
+
+                //Create SVG element
+                if (this.$el.find("#squid_api_pathanalysis_widget .pathanalysis_diagram").length > 0) {
+                    this.svg = d3.select("#squid_api_pathanalysis_widget .pathanalysis_diagram")
+                    .append("svg")
+                    .attr("width", w + margin.left + margin.right)
+                    .attr("height", documentHeight)
+                    .attr("originalHeight", documentHeight)
                     .append("g")
-                    .attr("class", "toplevel")
-                    .attr("firstYPosition", function(d, i ) {return (i * 75); })
-                    .attr("transform", function(d, i ) {return "translate(0, " + (i * 75) + ")"; });   
-        
-                // Append add icon for each path
-                var addIconGroup = topLevelGroup
-                    .append("g")
-                    .attr("class", "addbutton")
-                    .on("click", function() {
-                        if (! me.animating) {
-                            me.waterFall(this);
-                            me.animating = true;
-                            setTimeout(function() {
-                                me.animating = false;
-                            }, 500);
-                        }
-                    });
+                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-                var addIconRectangle = addIconGroup
-                    .append("rect")
-                    .attr({
-                        "transform": function(d, i) { return "translate(-20,0)"; },
-                        "width" : "45",
-                        "height" : "50",
-                        "fill" : "#fff",
-                        "rx" : "10",
-                        "ry" : "10",
-                    });
-                
-                var addIconText = addIconGroup
-                    .append("text")
-                    .attr("x", -14)
-                    .attr("y", 28)
-                    .text(function() {
-                        return '+';
-                    })
-                    .attr("fill", "#767676")
-                    .on("mouseover", function(d, i) {
-                        d3.select(this).transition()
+                    var tip = d3.tip()
+                        .attr('class', 'd3-tip animate')
+                        .offset([-10, 0])
+                        .html(function(d) {
+                            if (d.value < 60) {
+                                if (d.value === 0) {
+                                    return "<span class='name'>Name: " + d.name.length === 0 ? "Unknown" : d.name + " </span><br /><br /> <span class='time'>Time: N/A </span><br /><br /><span class='percentage'>Step % (path) : " + Math.round(d.percentage) + "%</span>";
+                                } else {
+                                    var value = d.value;
+                                    if (value < 1) {
+                                        value = d.value.toFixed(2);
+                                    }
+                                    return "<span class='name'>Name: " + d.name.length === 0 ? "Unknown" : d.name + " </span><br /><br /> <span class='time'>Time: " + value + "s</span><br /><br /><span class='percentage'>Step % (path) : " + Math.round(d.percentage) + "%</span>";
+                                }
+                            } else {
+                                var minutes = Math.floor(d.value / 60);
+                                var seconds = Math.floor(d.value - minutes * 60);
+                                return "<span class='name'>Name: " + d.name.length === 0 ? "Unknown" : d.name + " </span><br /><br /> <span class='time'>Time: " + minutes + "m " + seconds + "s" + "</span><br /><br /><span class='percentage'>Step % (path) : " + Math.round(d.percentage) + "%</span>";
+                            }
+                        });
+
+                    this.svg.call(tip);
+
+                    var groupOfGroups = this.svg.selectAll("g.toplevel")
+                        .data(formattedArray)
+                        .enter();
+
+                    var topLevelGroup = groupOfGroups
+                        .append("g")
+                        .attr("class", "toplevel")
+                        .attr("firstYPosition", function(d, i ) {return (i * 75); })
+                        .attr("transform", function(d, i ) {return "translate(0, " + (i * 75) + ")"; });   
+            
+                    // Append add icon for each path
+                    var addIconGroup = topLevelGroup
+                        .append("g")
+                        .attr("class", "addbutton")
+                        .on("click", function() {
+                            if (! me.animating) {
+                                me.waterFall(this);
+                                me.animating = true;
+                                setTimeout(function() {
+                                    me.animating = false;
+                                }, 500);
+                            }
+                        });
+
+                    var addIconRectangle = addIconGroup
+                        .append("rect")
+                        .attr({
+                            "transform": function(d, i) { return "translate(-20,0)"; },
+                            "width" : "45",
+                            "height" : "50",
+                            "fill" : "#fff",
+                            "rx" : "10",
+                            "ry" : "10",
+                        });
+                    
+                    var addIconText = addIconGroup
+                        .append("text")
+                        .attr("x", -14)
+                        .attr("y", 28)
+                        .text(function() {
+                            return '+';
+                        })
+                        .attr("fill", "#767676")
+                        .on("mouseover", function(d, i) {
+                            d3.select(this).transition()
+                                .ease('cubic-out')
+                                .duration('200')
+                                .attr('font-size', 17)
+                                .style("font-weight", function(d) { return "bold"; });
+                        })
+                        .on('mouseout', function(d,i) {
+                            d3.select(this).transition()
                             .ease('cubic-out')
                             .duration('200')
-                            .attr('font-size', 17)
-                            .style("font-weight", function(d) { return "bold"; });
-                    })
-                    .on('mouseout', function(d,i) {
-                        d3.select(this).transition()
-                        .ease('cubic-out')
-                        .duration('200')
-                        .attr('font-size', 14)
-                        .style("font-weight", function(d) { return "normal"; });
-                    });
-
-                // Add a group for each row of data
-                var groups = topLevelGroup.selectAll("g.dataset")
-                    .data(function(d) {return d.values; })
-                    .enter()
-                    .append("g")
-                    .attr("class", "dataset");
-
-                // Add a rect for each data value
-                var stepElements = groups.selectAll("rect")
-                    .data(function (d, i) {
-                        return d;
-                    })
-                    .enter()
-                    .append("rect")
-                    .on('mouseover', tip.show)
-                    .on('mouseout', tip.hide)
-                    .attr("x", function (d) {
-                        return 0;
-                    })
-                    .attr("y", function(d, i) {
-                        return 0;
-                    })
-                    .attr("height", 50)
-                    .style("fill", function (d, i) {
-                        if (squid_api.view.metadata[d.name]) {
-                            return squid_api.view.metadata[d.name].color;
-                        } else {
-                            return "#000";
-                        }
-                    });
-
-                // Add text for each data value
-                setTimeout(function() {
-                    var texts = groups.selectAll("text")
-                    .data(function (d) {
-                        return d;
-                    })
-                    .enter()
-                    .append("text")
-                    .text(function(d) {
-                        var name;
-                        if (d.name.length > 0) {
-                            name = d.name;
-                        } else {
-                            name = "Unknown";
-                        }
-                        return name;
-                    })
-                    .attr("x", function (d) {
-                        var value;
-                        var svgSize = d3.select(".pathanalysis_diagram svg").attr("width") - 250;
-                        var nodeSizing = this.parentNode.childNodes[0].getBoundingClientRect();
-                        if (this.getBBox().width > nodeSizing.width) {
-                            if (xScale(d.y0) + (xScale(d.y)) > svgSize) {
-                                return xScale(d.y0) - this.getBBox().width - 10;
-                            } else {
-                                return xScale(d.y0) + nodeSizing.width + 10;
-                            }
-                        } else {
-                            return xScale(d.y0) + (nodeSizing.width / 2) - (this.getBBox().width / 2);
-                        }
-                    })
-                    .attr("class", function (d) {
-                        var nodeSizing = this.parentNode.childNodes[0].getBoundingClientRect();
-                        if (this.getBBox().width > nodeSizing.width) {
-                            return "small";
-                        }
-                    })
-                    .attr("y", function (d) {
-                        return 30;
-                    })
-                    .attr("fill", function (d) {
-                        return "white";
-                    });
-                }, 500);
-                
-                // Add Column Data
-                var columnDataGroup = topLevelGroup.append("g")
-                    .attr("class", "data-column");
-                
-                // Add Column Data 1 (Visit %)
-                var visitPercentage = columnDataGroup
-                    .append("text")
-                    .text(function(d) {
-                        if (d.percentage < 1) {
-                            return (d.percentage).toFixed(2) + "%";
-                        } else {
-                            return Math.round(d.percentage) + "%";
-                        }
-                    })
-                    .attr("x", (width - margin.right) + 20)
-                    .attr("y", 30)
-                    .attr("fill", "#767676");
-
-                // Add Column Data 1 (Average Path Steptime)
-                var averagePathStepTime = columnDataGroup
-                    .append("text")
-                    .text(function(d) {
-                        if (d.average !== 0) {
-                            if (d.average < 60) {
-                                return  Math.floor(d.average / 60);
-                            } else {
-                                var minutes = Math.floor(d.average / 60);
-                                var seconds = Math.floor(d.average - minutes * 60);
-                                return minutes + "m " + seconds + "s";
-                            }
-                            return Math.round(d.average) + "s";
-                        }
-                    })
-                    .attr("x", (width - margin.right) + 77)
-                    .attr("y", 30)
-                    .attr("fill", "#767676");
-
-                var paths = groups.selectAll("path")
-                    .data(function (d) {
-                        return d;
-                    })
-                    .enter()
-                    .append("path")
-                    .filter(function(d) {
-                        if (d.lastNoValue === true) {
-                            return d.lastNoValue;
-                        } else if (d.lastValue === true) { 
-                            return d.lastValue;
-                        }  else {
-                            this.remove();
-                        }
-                    })
-                    .attr("d", function(d) {
-                        if (d.lastNoValue) {
-                            return "m" + (xScale(d.y0) + xScale(d.y) + 5) +"," + 0 + "c0,0 0,0 0,50c0";
-                        } else if (d.lastValue) {
-                            return "m" + (xScale(d.y0) + xScale(d.y) + 5) +"," + 0 + "c0,0 0,0 0,50c0";
-                        }
-                    })
-                    .attr("stroke-width", 2.5)
-                    .attr("stroke-dasharray", function(d) {
-                        if (d.lastValue) {
-                            return "8, 6, 8, 6";
-                        }
-                    })
-                    .style({"display": "none"});
-
-                if (! resize) {
-                    var transition = stepElements
-                        .transition()
-                        .attr('x', function(d) { 
-                            return xScale(d.y0);
-                        })
-                        .delay(function(d, i) {
-                            return i * 20;
-                        })
-                        .duration(500)
-                        .ease('exp')
-                        .attr("width", function (d) {
-                            return xScale(d.y);
+                            .attr('font-size', 14)
+                            .style("font-weight", function(d) { return "normal"; });
                         });
-                    setTimeout(function() {
-                        var pathsResize = paths
-                            .style({"display": "inherit"})
-                            .attr("stroke", function (d,i) {
-                                if (squid_api.view.metadata[d.name]) {
-                                    return squid_api.view.metadata[d.name].color;
-                                } else {
-                                    return "#000";
-                                }
-                            });
-                    }, 500);
-                } else {
-                    var xPosition = stepElements
-                        .attr('x', function(d) { 
-                            return xScale(d.y0);
+
+                    // Add a group for each row of data
+                    var groups = topLevelGroup.selectAll("g.dataset")
+                        .data(function(d) {return d.values; })
+                        .enter()
+                        .append("g")
+                        .attr("class", "dataset");
+
+                    // Add a rect for each data value
+                    var stepElements = groups.selectAll("rect")
+                        .data(function (d, i) {
+                            return d;
                         })
-                        .attr("width", function (d) {
-                            return xScale(d.y);
-                        });
-                    var pathsResize = paths
-                        .style({"display": "inherit"});
-                    var pathNoTransition = paths
-                        .attr("stroke", function (d,i) {
+                        .enter()
+                        .append("rect")
+                        .on('mouseover', tip.show)
+                        .on('mouseout', tip.hide)
+                        .attr("x", function (d) {
+                            return 0;
+                        })
+                        .attr("y", function(d, i) {
+                            return 0;
+                        })
+                        .attr("height", 50)
+                        .style("fill", function (d, i) {
                             if (squid_api.view.metadata[d.name]) {
                                 return squid_api.view.metadata[d.name].color;
-                            }
-                            else {
+                            } else {
                                 return "#000";
                             }
                         });
+
+                    // Add text for each data value
+                    setTimeout(function() {
+                        var texts = groups.selectAll("text")
+                        .data(function (d) {
+                            return d;
+                        })
+                        .enter()
+                        .append("text")
+                        .text(function(d) {
+                            var name;
+                            if (d.name.length > 0) {
+                                name = d.name;
+                            } else {
+                                name = "Unknown";
+                            }
+                            return name;
+                        })
+                        .attr("x", function (d) {
+                            var value;
+                            var svgSize = d3.select(".pathanalysis_diagram svg").attr("width") - 250;
+                            var nodeSizing = this.parentNode.childNodes[0].getBoundingClientRect();
+                            if (this.getBBox().width > nodeSizing.width) {
+                                if (xScale(d.y0) + (xScale(d.y)) > svgSize) {
+                                    return xScale(d.y0) - this.getBBox().width - 10;
+                                } else {
+                                    return xScale(d.y0) + nodeSizing.width + 10;
+                                }
+                            } else {
+                                return xScale(d.y0) + (nodeSizing.width / 2) - (this.getBBox().width / 2);
+                            }
+                        })
+                        .attr("class", function (d) {
+                            var nodeSizing = this.parentNode.childNodes[0].getBoundingClientRect();
+                            if (this.getBBox().width > nodeSizing.width) {
+                                return "small";
+                            }
+                        })
+                        .attr("y", function (d) {
+                            return 30;
+                        })
+                        .attr("fill", function (d) {
+                            if (squid_api.view.metadata[d.name]) {
+                                var color = squid_api.view.metadata[d.name].color;
+                                
+                                // obtain each RGB colour seperately
+                                color = color.substring(4, color.length-1)
+                                        .replace(/ /g, '')
+                                        .split(',');
+
+                                // perceptive luminance algorithm
+                                var percentiveLuminance = 1 - (0.299 * color[0] + 0.587 * color[1] + 0.114 * color[2]) / 255;
+                                if (percentiveLuminance < 0.5) {
+                                    return "#333";
+                                } else {
+                                    return "white";
+                                }
+                            } else {
+                                return "white";
+                            }
+                        });
+                    }, 500);
+                    
+                    // Add Column Data
+                    var columnDataGroup = topLevelGroup.append("g")
+                        .attr("class", "data-column");
+                    
+                    // Add Column Data 1 (Visit %)
+                    var visitPercentage = columnDataGroup
+                        .append("text")
+                        .text(function(d) {
+                            if (d.percentage < 1) {
+                                return (d.percentage).toFixed(2) + "%";
+                            } else {
+                                return Math.round(d.percentage) + "%";
+                            }
+                        })
+                        .attr("x", (width - margin.right) + 20)
+                        .attr("y", 30)
+                        .attr("fill", "#767676");
+
+                    // Add Column Data 1 (Average Path Steptime)
+                    var averagePathStepTime = columnDataGroup
+                        .append("text")
+                        .text(function(d) {
+                            if (d.average !== 0) {
+                                if (d.average < 60) {
+                                    return  Math.floor(d.average / 60);
+                                } else {
+                                    var minutes = Math.floor(d.average / 60);
+                                    var seconds = Math.floor(d.average - minutes * 60);
+                                    return minutes + "m " + seconds + "s";
+                                }
+                                return Math.round(d.average) + "s";
+                            }
+                        })
+                        .attr("x", (width - margin.right) + 77)
+                        .attr("y", 30)
+                        .attr("fill", "#767676");
+
+                    var paths = groups.selectAll("path")
+                        .data(function (d) {
+                            return d;
+                        })
+                        .enter()
+                        .append("path")
+                        .filter(function(d) {
+                            if (d.lastNoValue === true) {
+                                return d.lastNoValue;
+                            } else if (d.lastValue === true) { 
+                                return d.lastValue;
+                            }  else {
+                                this.remove();
+                            }
+                        })
+                        .attr("d", function(d) {
+                            if (d.lastNoValue) {
+                                return "m" + (xScale(d.y0) + xScale(d.y) + 5) +"," + 0 + "c0,0 0,0 0,50c0";
+                            } else if (d.lastValue) {
+                                return "m" + (xScale(d.y0) + xScale(d.y) + 5) +"," + 0 + "c0,0 0,0 0,50c0";
+                            }
+                        })
+                        .attr("stroke-width", 2.5)
+                        .attr("stroke-dasharray", function(d) {
+                            if (d.lastValue) {
+                                return "8, 6, 8, 6";
+                            }
+                        })
+                        .style({"display": "none"});
+
+                    if (! resize) {
+                        var transition = stepElements
+                            .transition()
+                            .attr('x', function(d) { 
+                                return xScale(d.y0);
+                            })
+                            .delay(function(d, i) {
+                                return i * 20;
+                            })
+                            .duration(500)
+                            .ease('exp')
+                            .attr("width", function (d) {
+                                return xScale(d.y);
+                            });
+                        setTimeout(function() {
+                            var pathsResize = paths
+                                .style({"display": "inherit"})
+                                .attr("stroke", function (d,i) {
+                                    if (squid_api.view.metadata[d.name]) {
+                                        return squid_api.view.metadata[d.name].color;
+                                    } else {
+                                        return "#000";
+                                    }
+                                });
+                        }, 500);
+                    } else {
+                        var xPosition = stepElements
+                            .attr('x', function(d) { 
+                                return xScale(d.y0);
+                            })
+                            .attr("width", function (d) {
+                                return xScale(d.y);
+                            });
+                        var pathsResize = paths
+                            .style({"display": "inherit"});
+                        var pathNoTransition = paths
+                            .attr("stroke", function (d,i) {
+                                if (squid_api.view.metadata[d.name]) {
+                                    return squid_api.view.metadata[d.name].color;
+                                }
+                                else {
+                                    return "#000";
+                                }
+                            });
+                    }
                 }
             }
+            
         },
 
         waterFall: function(node) {
@@ -727,6 +750,12 @@
             var html = this.template();
             this.$el.html(html);
             this.$el.show();
+
+            // Render the dimension selector here
+            if (this.orderByView){
+                this.orderByView.setElement(this.$el.find("#orderby"));
+                this.orderByView.render();
+            }
 
             // Starting Columns Height
             this.$el.find(".pathanalysis_columns").height($(window).height() - 278);
