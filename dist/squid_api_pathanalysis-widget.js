@@ -131,6 +131,8 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
 
                 // Obtain Total Count From Total Analysis
                 var totalCount = this.total.get("analyses")[0].get("results").rows[0].v[0];
+                console.log(this.total.get("analyses")[0].get("results").rows[0].v[0]);
+                console.log(this.total.get("analyses")[1].get("results").rows[0].v[0]);
 
                 var objects = [];
 
@@ -418,6 +420,10 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
                         .append("g")
                         .attr("class", "dataset");
 
+                    var perceptiveLuminance = function(color1, color2, color3) {
+                        return 1 - (0.299 * color1 + 0.587 * color2 + 0.114 * color3) / 255;
+                    };
+
                     // Add a rect for each data value
                     var stepElements = groups.selectAll("rect")
                         .data(function (d, i) {
@@ -430,6 +436,8 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
                         .attr("x", function (d) {
                             return 0;
                         })
+                        .attr("stroke", "white")
+                        .attr("stroke-width", 0.7)
                         .attr("y", function(d, i) {
                             return 0;
                         })
@@ -460,6 +468,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
                             return name;
                         })
                         .attr("x", function (d) {
+                            // Logic to place text in a logical position based on "client rect"
                             var value;
                             var svgSize = d3.select(".pathanalysis_diagram svg").attr("width") - 250;
                             var nodeSizing = this.parentNode.childNodes[0].getBoundingClientRect();
@@ -492,8 +501,8 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
                                         .split(',');
 
                                 // perceptive luminance algorithm
-                                var percentiveLuminance = 1 - (0.299 * color[0] + 0.587 * color[1] + 0.114 * color[2]) / 255;
-                                if (percentiveLuminance < 0.5) {
+                                var percentiveLuminanceValue = perceptiveLuminance(color[0], color[1], color[2]);
+                                if (percentiveLuminanceValue < 0.5) {
                                     return "#333";
                                 } else {
                                     return "white";
