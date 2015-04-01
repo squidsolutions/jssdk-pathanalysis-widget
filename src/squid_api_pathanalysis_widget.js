@@ -524,8 +524,14 @@
                         .text(function(d) {
                             if (d.average !== 0) {
                                 if (d.average < 60) {
-                                    var value = d.average / 60;
-                                    return value.toFixed(2) + "s";
+                                    var value = Math.floor(d.average);
+                                    if (value < 1) {
+                                        value = d.average.toFixed(2);
+                                        return value + "s";
+                                    } else {
+                                        value = Math.floor(d.average);
+                                        return value + "s";
+                                    }
                                 } else {
                                     var minutes = Math.floor(d.average / 60);
                                     var seconds = Math.floor(d.average - minutes * 60);
