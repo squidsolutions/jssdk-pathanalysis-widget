@@ -131,8 +131,6 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
 
                 // Obtain Total Count From Total Analysis
                 var totalCount = this.total.get("analyses")[0].get("results").rows[0].v[0];
-                console.log(this.total.get("analyses")[0].get("results").rows[0].v[0]);
-                console.log(this.total.get("analyses")[1].get("results").rows[0].v[0]);
 
                 var objects = [];
 
@@ -537,13 +535,13 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
                         .text(function(d) {
                             if (d.average !== 0) {
                                 if (d.average < 60) {
-                                    return  Math.floor(d.average / 60);
+                                    var value = d.average / 60;
+                                    return value.toFixed(2) + "s";
                                 } else {
                                     var minutes = Math.floor(d.average / 60);
                                     var seconds = Math.floor(d.average - minutes * 60);
                                     return minutes + "m " + seconds + "s";
                                 }
-                                return Math.round(d.average) + "s";
                             }
                         })
                         .attr("x", (width - margin.right) + 77)

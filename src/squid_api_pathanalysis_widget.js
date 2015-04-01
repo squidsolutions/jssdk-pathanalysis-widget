@@ -524,13 +524,13 @@
                         .text(function(d) {
                             if (d.average !== 0) {
                                 if (d.average < 60) {
-                                    return  Math.floor(d.average / 60);
+                                    var value = d.average / 60;
+                                    return value.toFixed(2) + "s";
                                 } else {
                                     var minutes = Math.floor(d.average / 60);
                                     var seconds = Math.floor(d.average - minutes * 60);
                                     return minutes + "m " + seconds + "s";
                                 }
-                                return Math.round(d.average) + "s";
                             }
                         })
                         .attr("x", (width - margin.right) + 77)
