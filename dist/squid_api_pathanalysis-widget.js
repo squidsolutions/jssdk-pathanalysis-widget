@@ -338,6 +338,9 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
                                     return "<span class='name'>Name: " + d.name.length === 0 ? "Unknown" : d.name + " </span><br /><br /> <span class='time'>Time: N/A </span><br /><br /><span class='percentage'>Step % (path) : " + Math.round(d.percentage) + "%</span>";
                                 } else {
                                     var value = d.value;
+                                    if (value < 60) {
+                                        value = d.value.toFixed(0);
+                                    }
                                     if (value < 1) {
                                         value = d.value.toFixed(2);
                                     }
@@ -446,9 +449,6 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
                                 return "#000";
                             }
                         });
-
-                    
-                    
                     
                     // Add Column Data
                     var columnDataGroup = topLevelGroup.append("g")
@@ -523,7 +523,6 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
                         })
                         .style({"display": "none"});
 
-                    
                         var xPosition = stepElements
                             .attr('x', function(d) { 
                                 return xScale(d.y0);
@@ -543,8 +542,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
                                 }
                             });
 
-                    // Add text for each data value
-                    
+                        // Add text for each data value
                         var texts = groups.selectAll("text")
                         .data(function (d) {
                             return d;
@@ -692,7 +690,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
                     // Expand Node Clicked
                     d3.select(node).select('text')
                         .text(function(d){
-                             return " -";
+                             return "-";
                         });
                     // Add expanded classes / attributes
                     d3.select(node).attr("expanded", true);
@@ -722,6 +720,9 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
                                 .attr('transform', "translate(0 " + yValue1 + ")")
                                 .duration(500)
                                 .ease('esp');
+
+                           
+
                         } else {
                             // order for all other tag orders
                             entitiesHeight = entitiesHeight + 50;
