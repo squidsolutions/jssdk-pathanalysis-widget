@@ -59,7 +59,6 @@
 #squid_api_pathanalysis_widget {
   position: relative;
   height: 450px;
-  min-width: 100%;
 }
 
 #squid_api_pathanalysis_widget .pathanalysis_header {

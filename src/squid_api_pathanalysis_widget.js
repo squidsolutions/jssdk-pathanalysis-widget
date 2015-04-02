@@ -369,7 +369,7 @@
                         .append("rect")
                         .attr({
                             "transform": function(d, i) { return "translate(-20,0)"; },
-                            "width" : "45",
+                            "width" : "30",
                             "height" : "50",
                             "fill" : "#fff",
                             "rx" : "10",
