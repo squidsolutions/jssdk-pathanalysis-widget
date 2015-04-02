@@ -242,11 +242,10 @@
         renderDiagram: function(resize) {
             var me = this;
             var data = this.getData();
-            var documentHeight = $(window).height() - 275;
+            var documentHeight = $(window).height() - 276;
             var width = this.$el.find(".pathanalysis_diagram").width();
             var headerWidth = this.$el.find(".pathanalysis_header").width();
-            var originalColumnsHeight = $(window).height() - 298;
-            $("#squid-widgets-wrapper").height($(window).height() - 93);
+            var originalColumnsHeight = $(window).height() - 248;
             this.$el.find(".pathanalysis_columns").height(originalColumnsHeight);
             this.$el.find(".pathanalysis_columns").attr("originalHeight", originalColumnsHeight);
             
@@ -437,68 +436,8 @@
                             }
                         });
 
-                    // Add text for each data value
-                    setTimeout(function() {
-                        var texts = groups.selectAll("text")
-                        .data(function (d) {
-                            return d;
-                        })
-                        .enter()
-                        .append("text")
-                        .text(function(d) {
-                            var name;
-                            if (d.name.length > 0) {
-                                name = d.name;
-                            } else {
-                                name = "Unknown";
-                            }
-                            return name;
-                        })
-                        .attr("x", function (d) {
-                            // Logic to place text in a logical position based on "client rect"
-                            var value;
-                            var svgSize = d3.select(".pathanalysis_diagram svg").attr("width") - 250;
-                            var nodeSizing = this.parentNode.childNodes[0].getBoundingClientRect();
-                            if (this.getBBox().width > nodeSizing.width) {
-                                if (xScale(d.y0) + (xScale(d.y)) > svgSize) {
-                                    return xScale(d.y0) - this.getBBox().width - 10;
-                                } else {
-                                    return xScale(d.y0) + nodeSizing.width + 10;
-                                }
-                            } else {
-                                return xScale(d.y0) + (nodeSizing.width / 2) - (this.getBBox().width / 2);
-                            }
-                        })
-                        .attr("class", function (d) {
-                            var nodeSizing = this.parentNode.childNodes[0].getBoundingClientRect();
-                            if (this.getBBox().width > nodeSizing.width) {
-                                return "small";
-                            }
-                        })
-                        .attr("y", function (d) {
-                            return 30;
-                        })
-                        .attr("fill", function (d) {
-                            if (squid_api.view.metadata[d.name]) {
-                                var color = squid_api.view.metadata[d.name].color;
-                                
-                                // obtain each RGB colour seperately
-                                color = color.substring(4, color.length-1)
-                                        .replace(/ /g, '')
-                                        .split(',');
-
-                                // perceptive luminance algorithm
-                                var percentiveLuminanceValue = perceptiveLuminance(color[0], color[1], color[2]);
-                                if (percentiveLuminanceValue < 0.5) {
-                                    return "#333";
-                                } else {
-                                    return "white";
-                                }
-                            } else {
-                                return "white";
-                            }
-                        });
-                    }, 500);
+                    
+                    
                     
                     // Add Column Data
                     var columnDataGroup = topLevelGroup.append("g")
@@ -573,32 +512,7 @@
                         })
                         .style({"display": "none"});
 
-                    if (! resize) {
-                        var transition = stepElements
-                            .transition()
-                            .attr('x', function(d) { 
-                                return xScale(d.y0);
-                            })
-                            .delay(function(d, i) {
-                                return i * 20;
-                            })
-                            .duration(500)
-                            .ease('exp')
-                            .attr("width", function (d) {
-                                return xScale(d.y);
-                            });
-                        setTimeout(function() {
-                            var pathsResize = paths
-                                .style({"display": "inherit"})
-                                .attr("stroke", function (d,i) {
-                                    if (squid_api.view.metadata[d.name]) {
-                                        return squid_api.view.metadata[d.name].color;
-                                    } else {
-                                        return "#000";
-                                    }
-                                });
-                        }, 500);
-                    } else {
+                    
                         var xPosition = stepElements
                             .attr('x', function(d) { 
                                 return xScale(d.y0);
@@ -617,7 +531,68 @@
                                     return "#000";
                                 }
                             });
-                    }
+
+                    // Add text for each data value
+                    
+                        var texts = groups.selectAll("text")
+                        .data(function (d) {
+                            return d;
+                        })
+                        .enter()
+                        .append("text")
+                        .text(function(d) {
+                            var name;
+                            if (d.name.length > 0) {
+                                name = d.name;
+                            } else {
+                                name = "Unknown";
+                            }
+                            return name;
+                        })
+                        .attr("x", function (d) {
+                            // Logic to place text in a logical position based on "client rect"
+                            var value;
+                            var svgSize = d3.select(".pathanalysis_diagram svg").attr("width") - 250;
+                            var nodeSizing = this.parentNode.childNodes[0].getBoundingClientRect();
+                            if (this.getBBox().width > nodeSizing.width) {
+                                if (xScale(d.y0) + (xScale(d.y)) > svgSize) {
+                                    return xScale(d.y0) - this.getBBox().width - 10;
+                                } else {
+                                    return xScale(d.y0) + nodeSizing.width + 10;
+                                }
+                            } else {
+                                return xScale(d.y0) + (nodeSizing.width / 2) - (this.getBBox().width / 2);
+                            }
+                        })
+                        .attr("class", function (d) {
+                            var nodeSizing = this.parentNode.childNodes[0].getBoundingClientRect();
+                            if (this.getBBox().width > nodeSizing.width) {
+                                return "small";
+                            }
+                        })
+                        .attr("y", function (d) {
+                            return 30;
+                        })
+                        .attr("fill", function (d) {
+                            if (squid_api.view.metadata[d.name]) {
+                                var color = squid_api.view.metadata[d.name].color;
+                                
+                                // obtain each RGB colour seperately
+                                color = color.substring(4, color.length-1)
+                                        .replace(/ /g, '')
+                                        .split(',');
+
+                                // perceptive luminance algorithm
+                                var percentiveLuminanceValue = perceptiveLuminance(color[0], color[1], color[2]);
+                                if (percentiveLuminanceValue < 0.5) {
+                                    return "#333";
+                                } else {
+                                    return "white";
+                                }
+                            } else {
+                                return "white";
+                            }
+                        });
                 }
             }
             
@@ -771,7 +746,7 @@
             }
 
             // Starting Columns Height
-            this.$el.find(".pathanalysis_columns").height($(window).height() - 278);
+            this.$el.find(".pathanalysis_columns").height($(window).height() - 248);
 
             return this;
         }
