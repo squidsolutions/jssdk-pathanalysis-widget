@@ -177,7 +177,7 @@ function program3(depth0,data) {
             var data;
 
             // iterate through all domains dimensions
-            var domain = squid_api.utils.find(squid_api.model.project.get("domains"), "oid", squid_api.domainId);
+            var domain = squid_api.utils.find(squid_api.model.project.get("domains"), "oid", squid_api.model.config.get("domain"));
             var domainMetrics = domain.metrics;
 
             for (i=0; i<domainMetrics.length; i++) {
@@ -571,7 +571,7 @@ function program3(depth0,data) {
                                     return Math.round(d.metricPercentage) + "%";
                                 }
                             })
-                            .attr("x", (width - margin.right) + 5)
+                            .attr("x", (width - margin.right) + 10)
                             .attr("y", 30)
                             .attr("fill", "#767676");
                     } else {
@@ -699,7 +699,7 @@ function program3(depth0,data) {
                             .attr("x", function (d) {
                                 // Logic to place text in a logical position based on "client rect"
                                 var value;
-                                var svgSize = d3.select(".pathanalysis_diagram svg").attr("width") - 250;
+                                var svgSize = d3.select(".pathanalysis_diagram svg").attr("width") - 350;
                                 var nodeSizing = this.parentNode.childNodes[0].getBoundingClientRect();
                                 if (this.getBBox().width > nodeSizing.width) {
                                     if (xScale(d.y0) + (xScale(d.y)) > svgSize) {
