@@ -1,15 +1,18 @@
 (function (root, factory) {
-    root.squid_api.view.PathAnalysisView = factory(root.Backbone, root.squid_api, squid_api.template.squid_api_pathanalysis_widget);
+    root.squid_api.view.PathAnalysisView = factory(root.Backbone, root.squid_api, squid_api.template.squid_api_pathanalysis_widget, squid_api.template.squid_api_pathanalysis_widget_columns);
 
-}(this, function (Backbone, squid_api, template) {
+}(this, function (Backbone, squid_api, template, columnsTemplate) {
 
     var View = Backbone.View.extend({
         template : null,
+        columnsTemplate: null,
         d3Formatter : null,
         jsonData : {},
         animating: false,
         modelOID : null,
         orderByView : null,
+        stepSwitcherView : null,
+        additionalMetricPresent : false,
 
         initialize: function(options) {
             var me = this;
@@ -21,11 +24,25 @@
             } else {
                 this.template = template;
             }
+            if (options.columnsTemplate) {
+                this.columnsTemplate = options.columnsTemplate;
+            } else {
+                this.columnsTemplate = squid_api.template.squid_api_pathanalysis_widget_columns;
+            }
             if (options.orderByView) {
                 this.orderByView = options.orderByView;
             }
+            if (options.mainModel) {
+                this.mainModel = options.mainModel;
+            }
+            if (options.stepSwitcherView) {
+                this.stepSwitcherView = options.stepSwitcherView;
+            }
             if (options.total) {
                 this.total = options.total;
+            }
+            if (options.metricAnalysis) {
+                this.metricAnalysis = options.metricAnalysis;
             }
             if (options.steps) {
                 this.steps = options.steps;
@@ -82,7 +99,12 @@
         },
 
         update: function() {
-          if (!this.model.isDone() || !this.total.isDone()) {
+            if (this.mainModel.get("selectedMetric") !== "count") {
+                this.additionalMetricPresent = true;
+            } else {
+                this.additionalMetricPresent = false;
+            }
+            if (!this.model.isDone() || !this.total.isDone() || !this.metricAnalysis.isDone()) {
                 // running
                 this.$el.find(".sq-content").show();
                 if (this.model.get("status") == "RUNNING") {
@@ -109,6 +131,28 @@
             }
         },
 
+        columnUpdate: function() {
+            var selectedMetric = this.mainModel.get("selectedMetric");
+            var data;
+
+            // iterate through all domains dimensions
+            var domain = squid_api.utils.find(squid_api.model.project.get("domains"), "oid", squid_api.model.config.get("domain"));
+            var domainMetrics = domain.metrics;
+
+            for (i=0; i<domainMetrics.length; i++) {
+                if (domainMetrics[i].id.metricId === selectedMetric) {
+                    selectedMetric = domainMetrics[i].name;
+                }
+            }
+
+            if (this.additionalMetricPresent) {
+                data = {"additionalMetric" : selectedMetric};
+            }
+
+            var html = this.columnsTemplate(data);
+            this.$el.find(".pathanalysis_columns").html(html);
+        },
+
         getData: function() {
             // Store Data From Analaysis
             var results = this.model.get("results");
@@ -117,10 +161,16 @@
                 var rows = results.rows;
 
                 var stepsInserted = this.steps;
+                var metricCount = 0;
 
                 // Obtain Total Count From Total Analysis
-                var totalCount = this.total.get("analyses")[0].get("results").rows[0].v[0];
-
+                if (this.additionalMetricPresent) {
+                    metricCount = this.metricAnalysis.get("results").rows[0].v[0];
+                }
+                if (this.total.get("analyses")) {
+                    totalCount = this.total.get("analyses")[0].get("results").rows[0].v[0];
+                }
+                
                 var objects = [];
 
                 for (i=0; i<rows.length; i++) {
@@ -219,6 +269,10 @@
                     dataValues.average = timeSum;
                     dataValues.percentage = rowItem[stepsInserted * 2] / totalCount * 100;
 
+                    if (this.additionalMetricPresent) {
+                        dataValues.metricPercentage = rowItem[(stepsInserted * 2) + 1] / metricCount * 100;
+                    }
+
                     objects.push(dataValues);
                 }
 
@@ -233,9 +287,16 @@
         },
 
         sortByPercentage: function(values) {
-            values.sort(function(a,b){
-                return (b.percentage - a.percentage);
-            });
+            if (! this.additionalMetricPresent) {
+                values.sort(function(a,b){
+                    return (b.percentage - a.percentage);
+                });
+            } else {
+                values.sort(function(a,b){
+                    return (b.metricPercentage - a.metricPercentage);
+                });
+            }
+            
             return values;
         },
 
@@ -252,6 +313,15 @@
             d3.select("#squid_api_pathanalysis_widget .pathanalysis_diagram svg").remove();
 
             var margin = { top: 0, left: 23, right: 175, bottom: 0 };
+            
+            this.columnUpdate();
+
+            if (this.additionalMetricPresent) {
+                margin.right = 215;
+                this.$el.find(".pathanalysis_columns").addClass("additionalMetric");
+            } else {
+                this.$el.find(".pathanalysis_columns").removeClass("additionalMetric");
+            }
 
             var w = width - margin.left - margin.right;
             
@@ -265,6 +335,9 @@
                     var path={};
                     path.average = data[i].average;
                     path.percentage = data[i].percentage;
+                    if (data[i].metricPercentage) {
+                       path.metricPercentage = data[i].metricPercentage; 
+                    }
                     path.values = [];
                     for (ix=0; ix<pathData.length; ix++) {
                         var arr = [];
@@ -442,7 +515,28 @@
                     // Add Column Data
                     var columnDataGroup = topLevelGroup.append("g")
                         .attr("class", "data-column");
-                    
+
+                    var noCount = false;
+
+                    if (this.mainModel.get("selectedMetric") !== "count") {
+                        noCount = true;
+                        // Add Column Data 1 (Visit %)
+                        var metricPercentage = columnDataGroup
+                            .append("text")
+                            .text(function(d) {
+                                if (d.metricPercentage < 1) {
+                                    return (d.metricPercentage).toFixed(2) + "%";
+                                } else {
+                                    return Math.round(d.metricPercentage) + "%";
+                                }
+                            })
+                            .attr("x", (width - margin.right) + 5)
+                            .attr("y", 30)
+                            .attr("fill", "#767676");
+                    } else {
+                        noCount = false;
+                    }
+
                     // Add Column Data 1 (Visit %)
                     var visitPercentage = columnDataGroup
                         .append("text")
@@ -453,7 +547,13 @@
                                 return Math.round(d.percentage) + "%";
                             }
                         })
-                        .attr("x", (width - margin.right) + 20)
+                        .attr("x", function() {
+                            if (noCount) {
+                                return (width - margin.right) + 60;
+                            } else {
+                                return (width - margin.right) + 20;
+                            }
+                        })
                         .attr("y", 30)
                         .attr("fill", "#767676");
 
@@ -478,7 +578,13 @@
                                 }
                             }
                         })
-                        .attr("x", (width - margin.right) + 77)
+                        .attr("x", function() {
+                            if (noCount) {
+                                return (width - margin.right) + 115;
+                            } else {
+                                return (width - margin.right) + 80;
+                            }
+                        })
                         .attr("y", 30)
                         .attr("fill", "#767676");
 
@@ -536,61 +642,112 @@
                         .data(function (d) {
                             return d;
                         })
-                        .enter()
-                        .append("text")
-                        .text(function(d) {
-                            var name;
-                            if (d.name.length > 0) {
-                                name = d.name;
-                            } else {
-                                name = "Unknown";
-                            }
-                            return name;
-                        })
-                        .attr("x", function (d) {
-                            // Logic to place text in a logical position based on "client rect"
-                            var value;
-                            var svgSize = d3.select(".pathanalysis_diagram svg").attr("width") - 250;
-                            var nodeSizing = this.parentNode.childNodes[0].getBoundingClientRect();
-                            if (this.getBBox().width > nodeSizing.width) {
-                                if (xScale(d.y0) + (xScale(d.y)) > svgSize) {
-                                    return xScale(d.y0) - this.getBBox().width - 10;
-                                } else {
-                                    return xScale(d.y0) + nodeSizing.width + 10;
-                                }
-                            } else {
-                                return xScale(d.y0) + (nodeSizing.width / 2) - (this.getBBox().width / 2);
-                            }
-                        })
-                        .attr("class", function (d) {
-                            var nodeSizing = this.parentNode.childNodes[0].getBoundingClientRect();
-                            if (this.getBBox().width > nodeSizing.width) {
-                                return "small";
-                            }
-                        })
-                        .attr("y", function (d) {
-                            return 30;
-                        })
-                        .attr("fill", function (d) {
-                            if (squid_api.view.metadata[d.name]) {
-                                var color = squid_api.view.metadata[d.name].color;
-                                
-                                // obtain each RGB colour seperately
-                                color = color.substring(4, color.length-1)
-                                        .replace(/ /g, '')
-                                        .split(',');
+                        .enter();
 
-                                // perceptive luminance algorithm
-                                var percentiveLuminanceValue = perceptiveLuminance(color[0], color[1], color[2]);
-                                if (percentiveLuminanceValue < 0.5) {
-                                    return "#333";
+                        // Item Text
+                        texts.append("text")
+                            .text(function(d) {
+                                var name;
+                                if (d.name.length > 0) {
+                                    name = d.name;
+                                } else {
+                                    name = "Unknown";
+                                }
+                                return name;
+                            })
+                            .attr("x", function (d) {
+                                // Logic to place text in a logical position based on "client rect"
+                                var value;
+                                var svgSize = d3.select(".pathanalysis_diagram svg").attr("width") - 250;
+                                var nodeSizing = this.parentNode.childNodes[0].getBoundingClientRect();
+                                if (this.getBBox().width > nodeSizing.width) {
+                                    if (xScale(d.y0) + (xScale(d.y)) > svgSize) {
+                                        return xScale(d.y0) - this.getBBox().width - 10;
+                                    } else {
+                                        return xScale(d.y0) + nodeSizing.width + 10;
+                                    }
+                                } else {
+                                    return xScale(d.y0) + (nodeSizing.width / 2) - (this.getBBox().width / 2);
+                                }
+                            })
+                            .attr("class", function (d) {
+                                var nodeSizing = this.parentNode.childNodes[0].getBoundingClientRect();
+                                if (this.getBBox().width > nodeSizing.width) {
+                                    return "small";
+                                }
+                            })
+                            .attr("y", function (d) {
+                                return 30;
+                            })
+                            .attr("fill", function (d) {
+                                if (squid_api.view.metadata[d.name]) {
+                                    var color = squid_api.view.metadata[d.name].color;
+                                    
+                                    // obtain each RGB colour seperately
+                                    color = color.substring(4, color.length-1)
+                                            .replace(/ /g, '')
+                                            .split(',');
+
+                                    // perceptive luminance algorithm
+                                    var percentiveLuminanceValue = perceptiveLuminance(color[0], color[1], color[2]);
+                                    if (percentiveLuminanceValue < 0.5) {
+                                        return "#333";
+                                    } else {
+                                        return "white";
+                                    }
                                 } else {
                                     return "white";
                                 }
-                            } else {
-                                return "white";
-                            }
-                        });
+                            });
+                        
+                        // Text value only shown in waterwall
+                        texts.append("text")
+                            .text(function(d) {
+                                if (d.percentage > 3) {
+                                    if (d.value < 60) {
+                                        if (d.value === 0) {
+                                            return "";
+                                        } else {
+                                            var value = d.value;
+                                            if (value < 60 && value > 2) {
+                                                value = d.value.toFixed(0) + "s";
+                                            } else {
+                                                value = "";
+                                            }
+                                            return value;
+                                        }
+                                    } else {
+                                        var minutes = Math.floor(d.value / 60);
+                                        var seconds = Math.floor(d.value - minutes * 60);
+                                        return minutes + "m " + seconds + "s";
+                                    }
+                                }
+                            })
+                            .attr("x", function (d) {
+                                // Logic to place text in a logical position based on "client rect"
+                                var value;
+                                var svgSize = d3.select(".pathanalysis_diagram svg").attr("width") - 250;
+                                var nodeSizing = this.parentNode.childNodes[0].getBoundingClientRect();
+                                if (this.getBBox().width > nodeSizing.width) {
+                                    if (xScale(d.y0) + (xScale(d.y)) > svgSize) {
+                                        return xScale(d.y0) - this.getBBox().width - 10;
+                                    } else {
+                                        return xScale(d.y0) + nodeSizing.width + 10;
+                                    }
+                                } else {
+                                    return xScale(d.y0) + (nodeSizing.width / 2) - (this.getBBox().width / 2);
+                                }
+                            })
+                            .attr("y", function (d) {
+                                return 65;
+                            })
+                            .attr("class", function (d) {
+                                return "time-value";
+                            })
+                            .attr("fill", function (d) {
+                                return "#767676";
+                            })
+                            .style({"display": "none"});
                 }
             }
             
@@ -650,13 +807,19 @@
                         var yValue = 50 * ix;
                         // Only animate node sets of rect & text, not text & text
                         if ($(children[ix][0])[0].tagName === "text" && $(children[ix][1])[0].tagName === "text") {
-                        } else if($(children[ix][0])[0].tagName === "rect" && $(children[ix][1])[0].tagName === "path" && $(children[ix][2])[0].tagName === "text") {
+                        } else if($(children[ix][0])[0].tagName === "rect" && $(children[ix][1])[0].tagName === "path" && $(children[ix][2])[0].tagName === "text" && $(children[ix][3])[0].tagName === "text") {
                             entitiesHeight = entitiesHeight + 50;
                             d3.select(children[ix][0].parentNode)
                                 .transition()
                                 .attr('transform', "translate(0 " + 0 + ")")
                                 .duration(500)
                                 .ease('esp');
+                            d3.select(children[ix][3])
+                                .transition()
+                                .attr("y", 75)
+                                .duration(500)
+                                .ease('esp')
+                                .style({"display": "none"});
                         } else {
                             entitiesHeight = entitiesHeight + 50;
                             d3.select(children[ix][0])
@@ -669,6 +832,12 @@
                                 .attr("y", 30)
                                 .duration(500)
                                 .ease('esp');
+                            d3.select(children[ix][2])
+                                .transition()
+                                .attr("y", 65)
+                                .duration(500)
+                                .ease('esp')
+                                .style({"display": "none"});
                         }
                     }
                     // Page Height Logic on node collapose
@@ -702,16 +871,19 @@
                         // Check whether we have Rect then text or text/text nodes
                         if ($(children[ix][0])[0].tagName === "text" && $(children[ix][1])[0].tagName === "text") {
                             // Logic for order rect / path / text
-                        } else if($(children[ix][0])[0].tagName === "rect" && $(children[ix][1])[0].tagName === "path" && $(children[ix][2])[0].tagName === "text") {
+                        } else if($(children[ix][0])[0].tagName === "rect" && $(children[ix][1])[0].tagName === "path" && $(children[ix][2])[0].tagName === "text" && $(children[ix][3])[0].tagName === "text") {
                             entitiesHeight = entitiesHeight + 50;
                             d3.select(children[ix][0].parentNode)
                                 .transition()
                                 .attr('transform', "translate(0 " + yValue1 + ")")
                                 .duration(500)
                                 .ease('esp');
-
-                           
-
+                            d3.select(children[ix][3])
+                                .transition()
+                                .attr("y", 64)
+                                .duration(500)
+                                .ease('esp')
+                                .style({"display": "inherit"});
                         } else {
                             // order for all other tag orders
                             entitiesHeight = entitiesHeight + 50;
@@ -725,6 +897,12 @@
                                 .attr("y", yValue1 + 30)
                                 .duration(500)
                                 .ease('esp');
+                            d3.select(children[ix][2])
+                                .transition()
+                                .attr("y", yValue1 + 64)
+                                .duration(500)
+                                .ease('esp')
+                                .style({"display": "inherit"});
                         }
                     }
                     // Expanding dom manipulation
@@ -745,9 +923,16 @@
                 this.orderByView.setElement(this.$el.find("#orderby"));
                 this.orderByView.render();
             }
+            // Render the dimension selector here
+            if (this.stepSwitcherView){
+                this.stepSwitcherView.setElement(this.$el.find("#stepswitcher"));
+                this.stepSwitcherView.render();
+            }
 
             // Starting Columns Height
             this.$el.find(".pathanalysis_columns").height($(window).height() - 248);
+
+            this.columnUpdate();
 
             return this;
         }

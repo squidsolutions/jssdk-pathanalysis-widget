@@ -78,14 +78,23 @@
   top: 62px;
 }
 
+#squid_api_pathanalysis_widget .pathanalysis_columns .additional-metric {
+  text-align: center;
+  position: relative;
+  left: -20px;
+}
+
+#squid_api_pathanalysis_widget .pathanalysis_columns.additionalMetric {
+  width: 200px;
+}
+
 #squid_api_pathanalysis_widget .pathanalysis_diagram {
   position: relative;
   z-index: 2;
 }
 
 #squid_api_pathanalysis_widget .pathanalysis_diagram .data-column text {
-  font-size: 13px;
-  font-weight: bold;
+  font-size: 15px;
 }
 
 #squid_api_pathanalysis_widget .pathanalysis_diagram .dataset text {
@@ -121,15 +130,19 @@
 
 #squid_api_pathanalysis_widget .column-header {
   font-size: 12px;
+  top: -53px;
+  position: relative;
 }
 
 #squid_api_pathanalysis_widget .column-header div {
   position: relative;
+  height: 50px;
 }
 
-#squid_api_pathanalysis_widget .column-header div.percentage {
-  top: -48px;
-  left: -8px;
+#squid_api_pathanalysis_widget .column-header div span {
+  position: absolute;
+  bottom: 0px;
+  text-align: center;
 }
 
 #squid_api_pathanalysis_widget .addbutton text {
@@ -186,8 +199,7 @@
 }
 
 #squid_api_pathanalysis_widget .column-header div.steptime {
-  top: -90px;
-  left: 50px;
+  
 }
 
 #squid_api_pathanalysis_widget .stats {
