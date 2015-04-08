@@ -66,9 +66,8 @@
                 }
             }
 
-            this.model.on("change", this.update, this);
-            this.total.on("change", this.update, this);
-            this.total.on("change", this.update, this);
+            this.listenTo(this.model, 'change', this.update);
+            this.listenTo(this.total, 'change', this.update);
 
             // Detect window resize
             $(window).on("resize", _.bind(this.resize(),this));
