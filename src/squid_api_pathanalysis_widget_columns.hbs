@@ -1,0 +1,21 @@
+<div class="column-header">
+    {{#if additionalMetric}}
+        <div class="col-md-3 additional-metric">
+            <span>{{additionalMetric}} %</span>
+        </div>
+        <div class="col-md-3 percentage">
+            <span>Visit % </span>
+        </div>
+        <div class="col-md-6 steptime">
+            <span>Time Duration</span>
+        </div>
+    {{else}}
+        <div class="col-md-4 percentage">
+            <span>Visit % </span>
+        </div>
+        <div class="col-md-8 steptime">
+            <span>Time Duration</span>
+        </div>
+    {{/if}}
+</div>
+
