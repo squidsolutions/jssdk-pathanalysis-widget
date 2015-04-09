@@ -198,10 +198,6 @@
   left: 0;
 }
 
-#squid_api_pathanalysis_widget .column-header div.steptime {
-  
-}
-
 #squid_api_pathanalysis_widget .stats {
   margin-left: 20px;
   font-size: 14px;
@@ -220,4 +216,47 @@
 #squid_api_pathanalysis_widget .squid-api-data-widgets-dimension-selector {
   top: 39px;
   position: relative;
+}
+
+.squid-api-pathanalysis-widget-tooltip {
+  min-width: 100px;
+}
+
+.squid-api-pathanalysis-widget-tooltip .name {
+  font-size: 14px;
+  color: #767676;
+  font-weight: bold;
+}
+
+.squid-api-pathanalysis-widget-tooltip .clock, .squid-api-pathanalysis-widget-tooltip .color, .squid-api-pathanalysis-widget-tooltip .value {
+  float: left;
+  font-weight: normal;
+  margin-top: 10px;
+  color: #767676;
+}
+
+.squid-api-pathanalysis-widget-tooltip .name {
+  font-size: 13px;
+  width: 20px;
+  display: inline-block;
+  min-width: 100px;
+  position: relative;
+  top: 12px;
+}
+
+.squid-api-pathanalysis-widget-tooltip .color {
+  width: 15px;
+  height: 15px;
+  border-radius: 50px;
+  margin-right: 10px;
+}
+
+.squid-api-pathanalysis-widget-tooltip .clock i {
+  font-size: 20px;
+}
+
+.squid-api-pathanalysis-widget-tooltip .value {
+  margin-left: 10px;
+  font-size: 14px;
+  margin-top: 13px;
 }

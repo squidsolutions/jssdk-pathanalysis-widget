@@ -1,11 +1,12 @@
 (function (root, factory) {
-    root.squid_api.view.PathAnalysisView = factory(root.Backbone, root.squid_api, squid_api.template.squid_api_pathanalysis_widget, squid_api.template.squid_api_pathanalysis_widget_columns);
+    root.squid_api.view.PathAnalysisView = factory(root.Backbone, root.squid_api, squid_api.template.squid_api_pathanalysis_widget, squid_api.template.squid_api_pathanalysis_widget_columns, squid_api.template.squid_api_pathanalysis_widget_tooltip);
 
-}(this, function (Backbone, squid_api, template, columnsTemplate) {
+}(this, function (Backbone, squid_api, template, columnsTemplate, tooltipTemplate) {
 
     var View = Backbone.View.extend({
         template : null,
         columnsTemplate: null,
+        tooltipTemplate: null,
         d3Formatter : null,
         jsonData : {},
         animating: false,
@@ -28,6 +29,11 @@
                 this.columnsTemplate = options.columnsTemplate;
             } else {
                 this.columnsTemplate = squid_api.template.squid_api_pathanalysis_widget_columns;
+            }
+            if (options.tooltipTemplate) {
+                this.tooltipTemplate = options.tooltipTemplate;
+            } else {
+                this.tooltipTemplate = squid_api.template.squid_api_pathanalysis_widget_tooltip;
             }
             if (options.orderByView) {
                 this.orderByView = options.orderByView;
@@ -395,24 +401,34 @@
                         .attr('class', 'd3-tip animate')
                         .offset([-10, 0])
                         .html(function(d) {
-                            if (d.value < 60) {
-                                if (d.value === 0) {
-                                    return "<span class='name'>Name: " + d.name.length === 0 ? "Unknown" : d.name + " </span><br /><br /> <span class='time'>Time: N/A </span><br /><br /><span class='percentage'>Step % (path) : " + Math.round(d.percentage) + "%</span>";
-                                } else {
-                                    var value = d.value;
-                                    if (value < 60) {
-                                        value = d.value.toFixed(0);
-                                    }
-                                    if (value < 1) {
-                                        value = d.value.toFixed(2);
-                                    }
-                                    return "<span class='name'>Name: " + d.name.length === 0 ? "Unknown" : d.name + " </span><br /><br /> <span class='time'>Time: " + value + "s</span><br /><br /><span class='percentage'>Step % (path) : " + Math.round(d.percentage) + "%</span>";
-                                }
+                            var jsonData = {};
+
+                            // Node Name
+                            if (d.name.length === 0) {
+                                jsonData.name = "Unknown";
+                            } else {
+                                jsonData.name = d.name;
+                            }
+
+                            if (squid_api.view.metadata[d.name]) {
+                                jsonData.color = squid_api.view.metadata[d.name].color;
+                            } else {
+                                jsonData.color = "#000";
+                            }
+
+                            // Node Value
+                            if (d.value === 0) {
+                                jsonData.value = "N/A";
+                            } else if (d.value < 60 && d.value >= 1) {
+                                jsonData.value = d.value.toFixed(0) + "s";
+                            } else if (d.value < 1) {
+                                jsonData.value = d.value.toFixed(2) + "s";
                             } else {
                                 var minutes = Math.floor(d.value / 60);
-                                var seconds = Math.floor(d.value - minutes * 60);
-                                return "<span class='name'>Name: " + d.name.length === 0 ? "Unknown" : d.name + " </span><br /><br /> <span class='time'>Time: " + minutes + "m " + seconds + "s" + "</span><br /><br /><span class='percentage'>Step % (path) : " + Math.round(d.percentage) + "%</span>";
+                                jsonData.value = Math.floor(d.value / 60) + "m" + Math.floor(d.value - minutes * 60) + "s";
                             }
+                            
+                            return me.tooltipTemplate(jsonData);
                         });
 
                     this.svg.call(tip);
