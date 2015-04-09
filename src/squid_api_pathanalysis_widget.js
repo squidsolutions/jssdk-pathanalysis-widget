@@ -136,7 +136,7 @@
             var data;
 
             // iterate through all domains dimensions
-            var domain = squid_api.utils.find(squid_api.model.project.get("domains"), "oid", squid_api.model.config.get("domain"));
+            var domain = squid_api.utils.find(squid_api.model.project.get("domains"), "oid", squid_api.model.config.get("domain"), "Domain");
             var domainMetrics = domain.metrics;
 
             for (i=0; i<domainMetrics.length; i++) {
