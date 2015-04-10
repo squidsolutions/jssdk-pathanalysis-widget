@@ -74,6 +74,7 @@
 
             this.listenTo(this.model, 'change', this.update);
             this.listenTo(this.total, 'change', this.update);
+            this.listenTo(this.metricAnalysis, 'change', this.update);
 
             // Detect window resize
             $(window).on("resize", _.bind(this.resize(),this));
@@ -170,11 +171,11 @@
                 var metricCount = 0;
 
                 // Obtain Total Count From Total Analysis
-                if (this.additionalMetricPresent) {
-                    metricCount = this.metricAnalysis.get("results").rows[0].v[0];
-                }
                 if (this.total.get("analyses")) {
                     totalCount = this.total.get("analyses")[0].get("results").rows[0].v[0];
+                }
+                if (this.additionalMetricPresent) {
+                    metricCount = this.metricAnalysis.get("results").rows[0].v[0];
                 }
                 
                 var objects = [];
