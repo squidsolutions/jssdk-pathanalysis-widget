@@ -238,8 +238,6 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
                 }
                 if (this.additionalMetricPresent) {
                     metricCount = this.metricAnalysis.get("results").rows[0].v[0];
-                    // var metricPercentage = (metricCount / totalCount) * 100;
-                    // $("#secondary-value").html(metricPercentage + "%");
                 }
                 
                 var objects = [];
@@ -835,7 +833,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
         },
 
         waterFall: function(node) {
-            var siblings = node.parentNode.children;
+            var siblings = node.parentNode.childNodes;
             var nodesToAnimate = [];
 
             // Store Siblings
@@ -851,7 +849,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
             // Get Children
             var children = [];
             for (i=0; i<nodesToAnimate.length; i++) {  
-                children.push(nodesToAnimate[i].children);
+                children.push(nodesToAnimate[i].childNodes);
             }
 
             // Get All Nodes after one being clicked

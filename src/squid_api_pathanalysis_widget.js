@@ -771,7 +771,7 @@
         },
 
         waterFall: function(node) {
-            var siblings = node.parentNode.children;
+            var siblings = node.parentNode.childNodes;
             var nodesToAnimate = [];
 
             // Store Siblings
@@ -787,7 +787,7 @@
             // Get Children
             var children = [];
             for (i=0; i<nodesToAnimate.length; i++) {  
-                children.push(nodesToAnimate[i].children);
+                children.push(nodesToAnimate[i].childNodes);
             }
 
             // Get All Nodes after one being clicked
