@@ -717,6 +717,65 @@
                                 }
                             });
                         
+                        texts.append("text")
+                            .text(function(d) {
+                                var nodeSizing = this.parentNode.childNodes[0].getBoundingClientRect();
+
+                                // Store Children Items of Node Values
+                                var childNodes = this.parentNode.childNodes;
+                                var smallTextNode;
+
+                                // Obtain textual Node which is used to calculate the width
+                                for (i=0; i<childNodes.length; i++) {
+                                    if (childNodes[i].classList.contains("small")) {
+                                        smallTextNode = childNodes[i];
+                                    }
+                                }
+
+                                // Print ... based on size difference
+                                if (smallTextNode) {
+                                    if (nodeSizing.width < 20) {
+                                        return "..";
+                                    } else {
+                                        return "...";
+                                    }
+                                } else {
+                                    return "";
+                                }
+                            })
+                            .attr("x", function (d) {
+                                // Logic to place text in a logical position based on "client rect"
+                                var value;
+                                var svgSize = d3.select(".pathanalysis_diagram svg").attr("width") - 350;
+                                var nodeSizing = this.parentNode.childNodes[0].getBoundingClientRect();
+                                if (this.getBBox().width < 100) {
+                                    return xScale(d.y0) + (nodeSizing.width / 2) - (this.getBBox().width / 2);
+                                } 
+                            })
+                            .attr("y", function (d) {
+                                return 30;
+                            })
+                            .attr("fill", function (d) {
+                                if (squid_api.view.metadata[d.name]) {
+                                    var color = squid_api.view.metadata[d.name].color;
+                                    
+                                    // obtain each RGB colour seperately
+                                    color = color.substring(4, color.length-1)
+                                            .replace(/ /g, '')
+                                            .split(',');
+
+                                    // perceptive luminance algorithm
+                                    var percentiveLuminanceValue = perceptiveLuminance(color[0], color[1], color[2]);
+                                    if (percentiveLuminanceValue < 0.5) {
+                                        return "#333";
+                                    } else {
+                                        return "white";
+                                    }
+                                } else {
+                                    return "white";
+                                }
+                            });
+                        
                         // Text value only shown in waterwall
                         texts.append("text")
                             .text(function(d) {
@@ -851,6 +910,12 @@
                                 .ease('esp');
                             d3.select(children[ix][2])
                                 .transition()
+                                .attr("y", 30)
+                                .duration(500)
+                                .ease('esp')
+                                .style({"display": "inherit"});
+                            d3.select(children[ix][3])
+                                .transition()
                                 .attr("y", 65)
                                 .duration(500)
                                 .ease('esp')
@@ -915,6 +980,12 @@
                                 .duration(500)
                                 .ease('esp');
                             d3.select(children[ix][2])
+                                .transition()
+                                .attr("y", yValue1 + 64)
+                                .duration(500)
+                                .ease('esp')
+                                .style({"display": "none"});
+                            d3.select(children[ix][3])
                                 .transition()
                                 .attr("y", yValue1 + 64)
                                 .duration(500)
