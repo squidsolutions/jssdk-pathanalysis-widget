@@ -417,6 +417,12 @@
                                 jsonData.color = "#000";
                             }
 
+                            if (d.lastNoValue === true) {
+                                jsonData.lastNoValue = true;
+                            } else if (d.lastValue === true) { 
+                                jsonData.lastValue = true;
+                            }
+
                             // Node Value
                             if (d.value === 0) {
                                 jsonData.value = "N/A";
@@ -892,10 +898,10 @@
                                 .ease('esp');
                             d3.select(children[ix][3])
                                 .transition()
-                                .attr("y", 75)
+                                .attr("y", 30)
                                 .duration(500)
                                 .ease('esp')
-                                .style({"display": "none"});
+                                .style({"display": "inherit"});
                         } else {
                             entitiesHeight = entitiesHeight + 50;
                             d3.select(children[ix][0])
@@ -965,7 +971,7 @@
                                 .attr("y", 64)
                                 .duration(500)
                                 .ease('esp')
-                                .style({"display": "inherit"});
+                                .style({"display": "none"});
                         } else {
                             // order for all other tag orders
                             entitiesHeight = entitiesHeight + 50;

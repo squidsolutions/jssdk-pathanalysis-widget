@@ -3,6 +3,14 @@
   		<tr>
     		<th class="color" style="background-color: {{color}}"></th>
     		<th class="name">{{name}}</th>
+        {{#if lastNoValue}}
+          <th class="line" style="border-left: solid 3px {{color}};"></th>
+          <th class="step"> No Steps After</th>
+        {{/if}}
+        {{#if lastValue}}
+            <th class="line" style="border-left: dotted 3px {{color}}; position: relative; top: 15px;"></th>
+            <th class="step"> Steps After Exist</th>
+        {{/if}}
   		</tr>
   		<tr>
   			<th class="clock"><i class="fa fa-clock-o"></i></th>

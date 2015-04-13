@@ -42,8 +42,29 @@ function program3(depth0,data) {
 this["squid_api"]["template"]["squid_api_pathanalysis_widget_tooltip"] = Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
   this.compilerInfo = [4,'>= 1.0.0'];
 helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
-  var buffer = "", stack1, helper, functionType="function", escapeExpression=this.escapeExpression;
+  var buffer = "", stack1, helper, functionType="function", escapeExpression=this.escapeExpression, self=this;
 
+function program1(depth0,data) {
+  
+  var buffer = "", stack1, helper;
+  buffer += "\n          <th class=\"line\" style=\"border-left: solid 3px ";
+  if (helper = helpers.color) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+  else { helper = (depth0 && depth0.color); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+  buffer += escapeExpression(stack1)
+    + ";\"></th>\n          <th class=\"step\"> No Steps After</th>\n        ";
+  return buffer;
+  }
+
+function program3(depth0,data) {
+  
+  var buffer = "", stack1, helper;
+  buffer += "\n            <th class=\"line\" style=\"border-left: dotted 3px ";
+  if (helper = helpers.color) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+  else { helper = (depth0 && depth0.color); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+  buffer += escapeExpression(stack1)
+    + "; position: relative; top: 15px;\"></th>\n            <th class=\"step\"> Steps After Exist</th>\n        ";
+  return buffer;
+  }
 
   buffer += "<div class=\"squid-api-pathanalysis-widget-tooltip\">\n	<table>\n  		<tr>\n    		<th class=\"color\" style=\"background-color: ";
   if (helper = helpers.color) { stack1 = helper.call(depth0, {hash:{},data:data}); }
@@ -53,7 +74,13 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   if (helper = helpers.name) { stack1 = helper.call(depth0, {hash:{},data:data}); }
   else { helper = (depth0 && depth0.name); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
   buffer += escapeExpression(stack1)
-    + "</th>\n  		</tr>\n  		<tr>\n  			<th class=\"clock\"><i class=\"fa fa-clock-o\"></i></th>\n    		<th class=\"value\">";
+    + "</th>\n        ";
+  stack1 = helpers['if'].call(depth0, (depth0 && depth0.lastNoValue), {hash:{},inverse:self.noop,fn:self.program(1, program1, data),data:data});
+  if(stack1 || stack1 === 0) { buffer += stack1; }
+  buffer += "\n        ";
+  stack1 = helpers['if'].call(depth0, (depth0 && depth0.lastValue), {hash:{},inverse:self.noop,fn:self.program(3, program3, data),data:data});
+  if(stack1 || stack1 === 0) { buffer += stack1; }
+  buffer += "\n  		</tr>\n  		<tr>\n  			<th class=\"clock\"><i class=\"fa fa-clock-o\"></i></th>\n    		<th class=\"value\">";
   if (helper = helpers.value) { stack1 = helper.call(depth0, {hash:{},data:data}); }
   else { helper = (depth0 && depth0.value); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
   buffer += escapeExpression(stack1)
@@ -340,7 +367,6 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
 
                     if (this.additionalMetricPresent) {
                         dataValues.metricPercentage = rowItem[(stepsInserted * 2) + 1] / metricCount * 100;
-                        console.log(rowItem[(stepsInserted * 2) + 1] + " / " + metricCount + " * 100");
                     }
 
                     objects.push(dataValues);
@@ -478,6 +504,12 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
                                 jsonData.color = squid_api.view.metadata[d.name].color;
                             } else {
                                 jsonData.color = "#000";
+                            }
+
+                            if (d.lastNoValue === true) {
+                                jsonData.lastNoValue = true;
+                            } else if (d.lastValue === true) { 
+                                jsonData.lastValue = true;
                             }
 
                             // Node Value
@@ -782,9 +814,6 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
                         
                         texts.append("text")
                             .text(function(d) {
-                                // Logic to place text in a logical position based on "client rect"
-                                var value;
-                                var svgSize = d3.select(".pathanalysis_diagram svg").attr("width") - 350;
                                 var nodeSizing = this.parentNode.childNodes[0].getBoundingClientRect();
 
                                 // Store Children Items of Node Values
@@ -958,10 +987,10 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
                                 .ease('esp');
                             d3.select(children[ix][3])
                                 .transition()
-                                .attr("y", 75)
+                                .attr("y", 30)
                                 .duration(500)
                                 .ease('esp')
-                                .style({"display": "none"});
+                                .style({"display": "inherit"});
                         } else {
                             entitiesHeight = entitiesHeight + 50;
                             d3.select(children[ix][0])
@@ -1031,7 +1060,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
                                 .attr("y", 64)
                                 .duration(500)
                                 .ease('esp')
-                                .style({"display": "inherit"});
+                                .style({"display": "none"});
                         } else {
                             // order for all other tag orders
                             entitiesHeight = entitiesHeight + 50;
