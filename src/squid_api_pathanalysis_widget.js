@@ -628,9 +628,9 @@
                         })
                         .attr("d", function(d) {
                             if (d.lastNoValue) {
-                                return "m" + (xScale(d.y0) + xScale(d.y) + 5) +"," + 0 + "c0,0 0,0 0,50c0";
+                                return "m" + (xScale(d.y0) + xScale(d.y) + 5) +"," + 0 + "c0,0 0,0 0,50";
                             } else if (d.lastValue) {
-                                return "m" + (xScale(d.y0) + xScale(d.y) + 5) +"," + 0 + "c0,0 0,0 0,50c0";
+                                return "m" + (xScale(d.y0) + xScale(d.y) + 5) +"," + 0 + "c0,0 0,0 0,50";
                             }
                         })
                         .attr("stroke-width", 2.5)
