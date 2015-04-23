@@ -302,7 +302,7 @@ function program3(depth0,data) {
                         obj.realPercentage = 100;
                         obj.displayPercentage = 100;
                         obj.stepname = rowItem[0];
-                        obj.lastValue = true;
+                        obj.lastNoValue = true;
                         obj.time = 0;
                         dataValues.data.push(obj);
                     } else {
