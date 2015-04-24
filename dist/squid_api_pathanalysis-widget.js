@@ -565,6 +565,11 @@ function program3(depth0,data) {
                         });
                     
                     var addIconText = addIconGroup
+                        .filter(function(d, i) {
+                            if (d.values.length > 1) {
+                                return i + 1;
+                            }
+                        })
                         .append("text")
                         .attr("x", -14)
                         .attr("y", 28)
