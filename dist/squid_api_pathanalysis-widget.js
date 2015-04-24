@@ -7,7 +7,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
   
 
 
-  return "<div class='sq-loading' style='position:absolute; width:100%; top:40%;'>\n<div class=\"spinner\">\n  <div class=\"rect5\"></div>\n  <div class=\"rect4\"></div>\n  <div class=\"rect3\"></div>\n  <div class=\"rect2\"></div>\n  <div class=\"rect1\"></div>\n  <div class=\"rect2\"></div>\n  <div class=\"rect3\"></div>\n  <div class=\"rect4\"></div>\n  <div class=\"rect5\"></div>\n</div>\n</div>\n<div id=\"squid_api_pathanalysis_widget\">\n  <div class=\"pathanalysis_header\">\n    <div class=\"row\">\n      <div class=\"col-md-5\">\n        <div id=\"orderby\" />\n      </div>\n    </div>\n  </div>\n	<div class=\"pathanalysis_diagram\">\n\n	</div>\n  <div class=\"pathanalysis_columns\">\n\n  </div>\n</div>";
+  return "<div class='sq-loading' style='position:absolute; width:100%; top:40%;'>\n<div class=\"spinner\">\n  <div class=\"rect5\"></div>\n  <div class=\"rect4\"></div>\n  <div class=\"rect3\"></div>\n  <div class=\"rect2\"></div>\n  <div class=\"rect1\"></div>\n  <div class=\"rect2\"></div>\n  <div class=\"rect3\"></div>\n  <div class=\"rect4\"></div>\n  <div class=\"rect5\"></div>\n</div>\n</div>\n<div id=\"squid_api_pathanalysis_widget\">\n  <div class=\"pathanalysis_header\">\n    <div class=\"row\">\n      <div class=\"col-md-2\">\n        <div id=\"orderby\" />\n      </div>\n       <div class=\"col-md-2\">\n        <div id=\"stepselector\" />\n      </div>\n    </div>\n  </div>\n	<div class=\"pathanalysis_diagram\">\n\n	</div>\n  <div class=\"pathanalysis_columns\">\n\n  </div>\n</div>";
   });
 
 this["squid_api"]["template"]["squid_api_pathanalysis_widget_columns"] = Handlebars.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -101,7 +101,7 @@ function program3(depth0,data) {
         animating: false,
         modelOID : null,
         orderByView : null,
-        stepSwitcherView : null,
+        stepSelectorView : null,
         additionalMetricPresent : false,
 
         initialize: function(options) {
@@ -127,11 +127,11 @@ function program3(depth0,data) {
             if (options.orderByView) {
                 this.orderByView = options.orderByView;
             }
+            if (options.stepSelectorView) {
+                this.stepSelectorView = options.stepSelectorView;
+            }
             if (options.mainModel) {
                 this.mainModel = options.mainModel;
-            }
-            if (options.stepSwitcherView) {
-                this.stepSwitcherView = options.stepSwitcherView;
             }
             if (options.total) {
                 this.total = options.total;
@@ -195,6 +195,11 @@ function program3(depth0,data) {
         },
 
         update: function() {
+            // Update Steps if changed
+            if (this.mainModel.get("pathAnalysisStepCount") && this.mainModel.get("pathAnalysisStepCount") !== this.steps) {
+                this.steps = this.mainModel.get("pathAnalysisStepCount");
+            }
+            
             if (this.mainModel.get("selectedMetric") !== "count") {
                 this.additionalMetricPresent = true;
             } else {
@@ -1112,9 +1117,10 @@ function program3(depth0,data) {
                 this.orderByView.render();
             }
             // Render the dimension selector here
-            if (this.stepSwitcherView){
-                this.stepSwitcherView.setElement(this.$el.find("#stepswitcher"));
-                this.stepSwitcherView.render();
+            if (this.stepSelectorView){
+                this.stepSelectorView.setElement(this.$el.find("#stepselector"));
+                this.stepSelectorView.defaultSteps(this.steps);
+                this.stepSelectorView.render();
             }
 
             // Starting Columns Height

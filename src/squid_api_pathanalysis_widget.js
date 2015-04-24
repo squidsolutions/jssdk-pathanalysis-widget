@@ -12,7 +12,7 @@
         animating: false,
         modelOID : null,
         orderByView : null,
-        stepSwitcherView : null,
+        stepSelectorView : null,
         additionalMetricPresent : false,
 
         initialize: function(options) {
@@ -38,11 +38,11 @@
             if (options.orderByView) {
                 this.orderByView = options.orderByView;
             }
+            if (options.stepSelectorView) {
+                this.stepSelectorView = options.stepSelectorView;
+            }
             if (options.mainModel) {
                 this.mainModel = options.mainModel;
-            }
-            if (options.stepSwitcherView) {
-                this.stepSwitcherView = options.stepSwitcherView;
             }
             if (options.total) {
                 this.total = options.total;
@@ -106,6 +106,11 @@
         },
 
         update: function() {
+            // Update Steps if changed
+            if (this.mainModel.get("pathAnalysisStepCount") && this.mainModel.get("pathAnalysisStepCount") !== this.steps) {
+                this.steps = this.mainModel.get("pathAnalysisStepCount");
+            }
+            
             if (this.mainModel.get("selectedMetric") !== "count") {
                 this.additionalMetricPresent = true;
             } else {
@@ -1023,9 +1028,10 @@
                 this.orderByView.render();
             }
             // Render the dimension selector here
-            if (this.stepSwitcherView){
-                this.stepSwitcherView.setElement(this.$el.find("#stepswitcher"));
-                this.stepSwitcherView.render();
+            if (this.stepSelectorView){
+                this.stepSelectorView.setElement(this.$el.find("#stepselector"));
+                this.stepSelectorView.defaultSteps(this.steps);
+                this.stepSelectorView.render();
             }
 
             // Starting Columns Height
