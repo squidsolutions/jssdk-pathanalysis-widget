@@ -1030,7 +1030,8 @@
             // Render the dimension selector here
             if (this.stepSelectorView){
                 this.stepSelectorView.setElement(this.$el.find("#stepselector"));
-                this.stepSelectorView.defaultSteps(this.steps);
+                this.stepSelectorView.setCurrentStep(this.steps);
+                this.stepSelectorView.setMaxSteps(this.mainModel.get("pathAnalysisStepCountMax"));
                 this.stepSelectorView.render();
             }
 
