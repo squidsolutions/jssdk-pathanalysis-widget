@@ -357,6 +357,7 @@
                         if (pathData[ix].percentage !== 0) {
                             obj.name = pathData[ix].stepname;
                             obj.value = pathData[ix].time;
+                            obj.number = ix;
                             if (pathData[ix].lastNoValue) {
                                 obj.lastNoValue = pathData[ix].lastNoValue;
                             } else {
@@ -439,6 +440,9 @@
                                 var minutes = Math.floor(d.value / 60);
                                 jsonData.value = Math.floor(d.value / 60) + "m" + Math.floor(d.value - minutes * 60) + "s";
                             }
+
+                            // Obtain Step Number
+                            jsonData.number = (d.number) + 1;
                             
                             return me.tooltipTemplate(jsonData);
                         });

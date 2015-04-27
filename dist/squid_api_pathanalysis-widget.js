@@ -84,7 +84,11 @@ function program3(depth0,data) {
   if (helper = helpers.value) { stack1 = helper.call(depth0, {hash:{},data:data}); }
   else { helper = (depth0 && depth0.value); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
   buffer += escapeExpression(stack1)
-    + "</th>\n  		</tr>\n	</table>\n</div>";
+    + "</th>\n  		</tr>\n      <tr>\n        <th class=\"step-number\">step: <span style=\"font-size: 18px;\">";
+  if (helper = helpers.number) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+  else { helper = (depth0 && depth0.number); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+  buffer += escapeExpression(stack1)
+    + "</th>\n      </tr>\n	</table>\n</div>";
   return buffer;
   });
 (function (root, factory) {
@@ -446,6 +450,7 @@ function program3(depth0,data) {
                         if (pathData[ix].percentage !== 0) {
                             obj.name = pathData[ix].stepname;
                             obj.value = pathData[ix].time;
+                            obj.number = ix;
                             if (pathData[ix].lastNoValue) {
                                 obj.lastNoValue = pathData[ix].lastNoValue;
                             } else {
@@ -528,6 +533,9 @@ function program3(depth0,data) {
                                 var minutes = Math.floor(d.value / 60);
                                 jsonData.value = Math.floor(d.value / 60) + "m" + Math.floor(d.value - minutes * 60) + "s";
                             }
+
+                            // Obtain Step Number
+                            jsonData.number = (d.number) + 1;
                             
                             return me.tooltipTemplate(jsonData);
                         });

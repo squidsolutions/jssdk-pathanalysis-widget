@@ -222,13 +222,13 @@
   min-width: 100px;
 }
 
-.squid-api-pathanalysis-widget-tooltip .name {
+.squid-api-pathanalysis-widget-tooltip .name, .squid-api-pathanalysis-widget-tooltip th.step-number {
   font-size: 14px;
   color: #767676;
   font-weight: bold;
 }
 
-.squid-api-pathanalysis-widget-tooltip .clock, .squid-api-pathanalysis-widget-tooltip .color, .squid-api-pathanalysis-widget-tooltip .value {
+.squid-api-pathanalysis-widget-tooltip .step-number, .squid-api-pathanalysis-widget-tooltip .clock, .squid-api-pathanalysis-widget-tooltip .color, .squid-api-pathanalysis-widget-tooltip .value {
   float: left;
   font-weight: normal;
   margin-top: 10px;
@@ -273,4 +273,10 @@
   margin-left: 10px;
   font-size: 14px;
   margin-top: 13px;
+}
+
+.squid-api-pathanalysis-widget-tooltip .step-number {
+  padding: 7px;
+  position: relative;
+  left: -5px;
 }
