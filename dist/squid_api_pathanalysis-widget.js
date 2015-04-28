@@ -270,7 +270,9 @@ function program3(depth0,data) {
 
                 // Obtain Total Count From Total Analysis
                 if (this.total.get("analyses")) {
-                    totalCount = this.total.get("analyses")[0].get("results").rows[0].v[0];
+                    if (this.total.get("analyses")[0].get("results").rows[0]) {
+                        totalCount = this.total.get("analyses")[0].get("results").rows[0].v[0];
+                    }
                 }
                 if (this.additionalMetricPresent) {
                     metricCount = this.metricAnalysis.get("results").rows[0].v[0];
@@ -964,92 +966,31 @@ function program3(depth0,data) {
 
             // Get All Nodes after one being clicked
             var nodeAfter = $(siblings[0]).parent().nextAll();
+            // If G Node has more than One Value (With the second one being the text column values, so this is added on)
             if (children.length > 2) {
-                // If node has more than 2 nodes
                 var svgHeight = parseInt(d3.select("#squid_api_pathanalysis_widget svg").attr("height"));
                 var widgetsWrapperHeight = $("#squid-widgets-wrapper").height();
                 var columnsHeight = $("#squid_api_pathanalysis_widget .pathanalysis_columns").height();
                 var originalColumnsHeight = $("#squid_api_pathanalysis_widget .pathanalysis_columns").attr("originalHeight");
                 var entitiesHeight = 0;
-                if (node.hasAttribute("expanded")) {
-                    // If it is expanded
-                    d3.select(node).select('text')
-                        .text(function(d){
-                             return "+";
-                        });
-                    d3.select(node).attr("expanded", null);
-                    d3.select(node.parentNode).attr("class", null);
-                    // Place nodes after back into position in regards to previous node
-                    for (i=0; i<nodeAfter.length; i++) {
-                        var previousYValue = parseInt(d3.select(nodeAfter[i]).attr("previousYValue"));
-                        var currentNodeTranslate = d3.transform(d3.select(nodeAfter[i]).attr("transform")).translate[1];
-                            var newYValue = currentNodeTranslate - (children.length * 50);
-                            d3.select(nodeAfter[i])
-                                .transition()
-                                .attr('transform', "translate(0," + newYValue + ")")
-                                .duration(500)
-                                .ease('esp');
-                    }
-                    entitiesHeight = 0;
-                    // Place expanded nodes back into straight line position
-                    for (ix=0; ix<children.length; ix++) {
-                        var yValue = 50 * ix;
-                        // Only animate node sets of rect & text, not text & text
-                        if ($(children[ix][0])[0].tagName === "text" && $(children[ix][1])[0].tagName === "text") {
-                        } else if($(children[ix][0])[0].tagName === "rect" && $(children[ix][1])[0].tagName === "path" && $(children[ix][2])[0].tagName === "text" && $(children[ix][3])[0].tagName === "text") {
-                            entitiesHeight = entitiesHeight + 50;
-                            d3.select(children[ix][0].parentNode)
-                                .transition()
-                                .attr('transform', "translate(0 " + 0 + ")")
-                                .duration(500)
-                                .ease('esp');
-                            d3.select(children[ix][3])
-                                .transition()
-                                .attr("y", 30)
-                                .duration(500)
-                                .ease('esp')
-                                .style({"display": "inherit"});
-                        } else {
-                            entitiesHeight = entitiesHeight + 50;
-                            d3.select(children[ix][0])
-                                .transition()
-                                .attr("y", 0)
-                                .duration(500)
-                                .ease('esp');
-                            d3.select(children[ix][1])
-                                .transition()
-                                .attr("y", 30)
-                                .duration(500)
-                                .ease('esp');
-                            d3.select(children[ix][2])
-                                .transition()
-                                .attr("y", 30)
-                                .duration(500)
-                                .ease('esp')
-                                .style({"display": "inherit"});
-                            d3.select(children[ix][3])
-                                .transition()
-                                .attr("y", 65)
-                                .duration(500)
-                                .ease('esp')
-                                .style({"display": "none"});
-                        }
-                    }
-                    // Page Height Logic on node collapose
-                    d3.select("#squid_api_pathanalysis_widget svg").attr("height", svgHeight - entitiesHeight - 50);
-                    $("#squid-widgets-wrapper").height(widgetsWrapperHeight - entitiesHeight - 50);
-                    $("#squid_api_pathanalysis_widget .pathanalysis_columns").height(columnsHeight - entitiesHeight - 50);
-                } else {
-                    // Expand Node Clicked
+
+                if (! node.hasAttribute("expanded")) {
+
+                /* 
+                    Expand Path to Waterfall
+                */
+                    
+                    // Change Icon Text
                     d3.select(node).select('text')
                         .text(function(d){
                              return "-";
                         });
-                    // Add expanded classes / attributes
+
+                    // Modify Node Class / Attributes
                     d3.select(node).attr("expanded", true);
                     d3.select(node.parentNode).attr("class", "expanded");
 
-                    // Collapose Nodes After
+                    // Move Nodes After the one Clicked Further down the page
                     for (i=0; i<nodeAfter.length; i++) {
                         var previousYValue1 = d3.transform(d3.select(nodeAfter[i]).attr("transform")).translate[1];
                         var newYValue1 = previousYValue1 + (children.length * 50);
@@ -1060,26 +1001,30 @@ function program3(depth0,data) {
                             .ease('esp');
                     }
                     entitiesHeight = 0;
-                    // Animate Row
+                    /*
+                        Node Length of 5 = Node Items with a SVG Path attribute
+                        Node Length of 2 = Text Column Attributes on the Right of Page
+                        Node Length of 3 = Text Columns Attributes on the Right of Page when we use an additional metric
+                        Node Length of (other quantity) = All other node types           
+                    */
                     for (ix=0; ix<children.length; ix++) {
                         var yValue1 = 50 * ix;
-                        // Check whether we have Rect then text or text/text nodes
-                        if ($(children[ix][0])[0].tagName === "text" && $(children[ix][1])[0].tagName === "text") {
-                            // Logic for order rect / path / text
-                        } else if($(children[ix][0])[0].tagName === "rect" && $(children[ix][1])[0].tagName === "path" && $(children[ix][2])[0].tagName === "text" && $(children[ix][3])[0].tagName === "text") {
+                        if (children[ix].length === 5) {
                             entitiesHeight = entitiesHeight + 50;
                             d3.select(children[ix][0].parentNode)
                                 .transition()
                                 .attr('transform', "translate(0 " + yValue1 + ")")
                                 .duration(500)
                                 .ease('esp');
-                            d3.select(children[ix][3])
+
+                            d3.select(children[ix][4])
                                 .transition()
                                 .attr("y", 64)
                                 .duration(500)
                                 .ease('esp')
-                                .style({"display": "none"});
-                        } else {
+                                .style({"display": "inherit"});
+                           
+                         } else if (children[ix].length !== 2 && children[ix].length !== 3) {
                             // order for all other tag orders
                             entitiesHeight = entitiesHeight + 50;
                             d3.select(children[ix][0])
@@ -1110,6 +1055,84 @@ function program3(depth0,data) {
                     d3.select("#squid_api_pathanalysis_widget svg").attr("height", svgHeight + entitiesHeight + 50);
                     $("#squid-widgets-wrapper").height(widgetsWrapperHeight + entitiesHeight + 50);
                     $("#squid_api_pathanalysis_widget .pathanalysis_columns").height(columnsHeight + entitiesHeight + 50);
+                } else {
+
+                /* 
+                    Collapse path out of waterfall
+                */
+
+                    d3.select(node).select('text')
+                        .text(function(d){
+                             return "+";
+                        });
+                    d3.select(node).attr("expanded", null);
+                    d3.select(node.parentNode).attr("class", null);
+
+                    // Move Nodes After the one Clicked Back up into position
+                    for (i=0; i<nodeAfter.length; i++) {
+                        var previousYValue = parseInt(d3.select(nodeAfter[i]).attr("previousYValue"));
+                        var currentNodeTranslate = d3.transform(d3.select(nodeAfter[i]).attr("transform")).translate[1];
+                            var newYValue = currentNodeTranslate - (children.length * 50);
+                            d3.select(nodeAfter[i])
+                                .transition()
+                                .attr('transform', "translate(0," + newYValue + ")")
+                                .duration(500)
+                                .ease('esp');
+                    }
+                    entitiesHeight = 0;
+
+                    for (ix=0; ix<children.length; ix++) {
+                        var yValue = 50 * ix;
+                        /*
+                            Node Length of 5 = Node Items with a SVG Path attribute
+                            Node Length of 2 = Text Column Attributes on the Right of Page
+                            Node Length of 3 = Text Columns Attributes on the Right of Page when we use an additional metric
+                            Node Length of (other quantity) = All other node types           
+                        */
+                        if (children[ix].length === 5) {
+                            entitiesHeight = entitiesHeight + 50;
+                            d3.select(children[ix][0].parentNode)
+                                .transition()
+                                .attr('transform', "translate(0 " + 0 + ")")
+                                .duration(500)
+                                .ease('esp');
+                            d3.select(children[ix][4])
+                                .transition()
+                                .attr("y", 30)
+                                .duration(500)
+                                .ease('esp')
+                                .style({"display": "none"});
+                        } else if (children[ix].length !== 2 && children[ix].length !== 3) {
+                            entitiesHeight = entitiesHeight + 50;
+                            d3.select(children[ix][0])
+                                .transition()
+                                .attr("y", 0)
+                                .duration(500)
+                                .ease('esp');
+                            d3.select(children[ix][1])
+                                .transition()
+                                .attr("y", 30)
+                                .duration(500)
+                                .ease('esp');
+                            d3.select(children[ix][2])
+                                .transition()
+                                .attr("y", 30)
+                                .duration(500)
+                                .ease('esp')
+                                .style({"display": "inherit"});
+                            d3.select(children[ix][3])
+                                .transition()
+                                .attr("y", 65)
+                                .duration(500)
+                                .ease('esp')
+                                .style({"display": "none"});
+                        }
+                    }
+                    
+                    // Page Height Logic For WaterFall Expand
+                    d3.select("#squid_api_pathanalysis_widget svg").attr("height", svgHeight - entitiesHeight - 50);
+                    $("#squid-widgets-wrapper").height(widgetsWrapperHeight - entitiesHeight - 50);
+                    $("#squid_api_pathanalysis_widget .pathanalysis_columns").height(columnsHeight - entitiesHeight - 50);
                 }
             }
         },
