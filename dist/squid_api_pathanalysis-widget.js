@@ -503,7 +503,7 @@ function program3(depth0,data) {
                     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
                     var tip = d3.tip()
-                        .attr('class', 'd3-tip animate')
+                        .attr('class', 'd3-tip animate pathanalysis-tip')
                         .offset([-10, 0])
                         .html(function(d) {
                             var jsonData = {};

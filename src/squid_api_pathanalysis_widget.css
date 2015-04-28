@@ -279,3 +279,7 @@
   position: relative;
   left: -5px;
 }
+
+.pathanalysis-tip:after {
+  text-align: center !important;
+}
