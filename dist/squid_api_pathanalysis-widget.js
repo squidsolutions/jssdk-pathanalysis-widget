@@ -146,6 +146,9 @@ function program3(depth0,data) {
             if (options.steps) {
                 this.steps = options.steps;
             }
+            if (options.afterRender) {
+                this.afterRender = options.afterRender;
+            }
             if (options.format) {
                 this.format = options.format;
             } else {
@@ -941,7 +944,6 @@ function program3(depth0,data) {
                             .style({"display": "none"});
                 }
             }
-            
         },
 
         waterFall: function(node) {
@@ -976,9 +978,7 @@ function program3(depth0,data) {
 
                 if (! node.hasAttribute("expanded")) {
 
-                /* 
-                    Expand Path to Waterfall
-                */
+                // Expand Path to Waterfall
                     
                     // Change Icon Text
                     d3.select(node).select('text')
@@ -1057,9 +1057,7 @@ function program3(depth0,data) {
                     $("#squid_api_pathanalysis_widget .pathanalysis_columns").height(columnsHeight + entitiesHeight + 50);
                 } else {
 
-                /* 
-                    Collapse path out of waterfall
-                */
+                // Collapse Path from waterfall
 
                     d3.select(node).select('text')
                         .text(function(d){
@@ -1159,6 +1157,11 @@ function program3(depth0,data) {
             this.$el.find(".pathanalysis_columns").height($(window).height() - 248);
 
             this.columnUpdate();
+
+            if (this.afterRender) {
+                // call the afterRender function
+                this.afterRender(event);
+            }
 
             return this;
         }
