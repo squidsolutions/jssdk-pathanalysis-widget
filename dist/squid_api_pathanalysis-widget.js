@@ -315,7 +315,7 @@ function program3(depth0,data) {
                         obj = {};
                         obj.realPercentage = 100;
                         obj.displayPercentage = 100;
-                        obj.stepname = rowItem[0];
+                        obj.stepname = rowItem[0].trim();
                         obj.lastNoValue = true;
                         obj.time = 0;
                         dataValues.data.push(obj);
@@ -330,7 +330,7 @@ function program3(depth0,data) {
                                 }
                                 obj.realPercentage = parseFloat(obj.time / timeSum * 100);
                                 if (rowItem[ix - stepsInserted].length !== 0) {
-                                    obj.stepname = rowItem[ix - stepsInserted];
+                                    obj.stepname = rowItem[ix - stepsInserted].trim();
                                 } else {
                                     obj.stepname = "Unknown";
                                 }
