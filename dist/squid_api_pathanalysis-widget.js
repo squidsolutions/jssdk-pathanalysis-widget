@@ -1160,7 +1160,7 @@ function program3(depth0,data) {
 
             if (this.afterRender) {
                 // call the afterRender function
-                this.afterRender(event);
+                this.afterRender();
             }
 
             return this;
