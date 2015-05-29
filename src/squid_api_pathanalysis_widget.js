@@ -77,8 +77,11 @@
 
             this.listenTo(this.model, 'change', this.update);
             this.listenTo(this.total, 'change', this.update);
-            this.listenTo(this.metricAnalysis, 'change', this.update);
-
+            
+            if (this.metricAnalysis) {
+                this.listenTo(this.metricAnalysis, 'change', this.update);
+            }
+            
             // Detect window resize
             $(window).on("resize", _.bind(this.resize(),this));
 
@@ -119,7 +122,7 @@
             } else {
                 this.additionalMetricPresent = false;
             }
-            if (!this.model.isDone() || !this.total.isDone() || !this.metricAnalysis.isDone()) {
+            if (!this.model.isDone() || !this.total.isDone() || (this.metricAnalysis && !this.metricAnalysis.isDone())) {
                 // running
                 this.$el.find(".sq-content").show();
                 if (this.model.get("status") == "RUNNING") {
