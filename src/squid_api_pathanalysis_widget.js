@@ -14,6 +14,7 @@
         orderByView : null,
         stepSelectorView : null,
         additionalMetricPresent : false,
+        metadata : null,
 
         initialize: function(options) {
             var me = this;
@@ -55,6 +56,9 @@
             }
             if (options.afterRender) {
                 this.afterRender = options.afterRender;
+            }
+            if (options.metadata) {
+                this.metadata = options.metadata;
             }
             if (options.format) {
                 this.format = options.format;
@@ -425,8 +429,8 @@
                                 jsonData.name = d.name;
                             }
 
-                            if (squid_api.view.metadata[d.name]) {
-                                jsonData.color = squid_api.view.metadata[d.name].color;
+                            if (me.metadata[d.name]) {
+                                jsonData.color = me.metadata[d.name].color;
                             } else {
                                 jsonData.color = "#000";
                             }
@@ -550,8 +554,8 @@
                         })
                         .attr("height", 50)
                         .style("fill", function (d, i) {
-                            if (squid_api.view.metadata[d.name]) {
-                                return squid_api.view.metadata[d.name].color;
+                            if (me.metadata[d.name]) {
+                                return me.metadata[d.name].color;
                             } else {
                                 return "#000";
                             }
@@ -674,8 +678,8 @@
                             .style({"display": "inherit"});
                         var pathNoTransition = paths
                             .attr("stroke", function (d,i) {
-                                if (squid_api.view.metadata[d.name]) {
-                                    return squid_api.view.metadata[d.name].color;
+                                if (me.metadata[d.name]) {
+                                    return me.metadata[d.name].color;
                                 }
                                 else {
                                     return "#000";
@@ -725,8 +729,8 @@
                                 return 30;
                             })
                             .attr("fill", function (d) {
-                                if (squid_api.view.metadata[d.name]) {
-                                    var color = squid_api.view.metadata[d.name].color;
+                                if (me.metadata[d.name]) {
+                                    var color = me.metadata[d.name].color;
                                     
                                     // obtain each RGB colour seperately
                                     color = color.substring(4, color.length-1)
@@ -784,8 +788,8 @@
                                 return 30;
                             })
                             .attr("fill", function (d) {
-                                if (squid_api.view.metadata[d.name]) {
-                                    var color = squid_api.view.metadata[d.name].color;
+                                if (me.metadata[d.name]) {
+                                    var color = me.metadata[d.name].color;
                                     
                                     // obtain each RGB colour seperately
                                     color = color.substring(4, color.length-1)
