@@ -18,6 +18,7 @@
 
         initialize: function(options) {
             var me = this;
+            this.status = squid_api.model.status;
             var svg;
 
             // setup options
@@ -81,11 +82,11 @@
 
             this.listenTo(this.model, 'change', this.update);
             this.listenTo(this.total, 'change', this.update);
-            
+
             if (this.metricAnalysis) {
                 this.listenTo(this.metricAnalysis, 'change', this.update);
             }
-            
+
             // Detect window resize
             $(window).on("resize", _.bind(this.resize(),this));
 
@@ -120,12 +121,13 @@
             if (this.mainModel.get("pathAnalysisStepCount") && this.mainModel.get("pathAnalysisStepCount") !== this.steps) {
                 this.steps = this.mainModel.get("pathAnalysisStepCount");
             }
-            
+
             if (this.mainModel.get("selectedMetric") !== "count") {
                 this.additionalMetricPresent = true;
             } else {
                 this.additionalMetricPresent = false;
             }
+
             if (!this.model.isDone() || !this.total.isDone() || (this.metricAnalysis && !this.metricAnalysis.isDone())) {
                 // running
                 this.$el.find(".sq-content").show();
@@ -140,15 +142,8 @@
                 this.$el.find(".sq-loading").hide();
             } else {
                 this.$el.find(".sq-loading").hide();
-                // Set Model ID to avoid data refresh
-                if (! this.modelOID) {
-                    this.modelOID = this.model.get("oid");
+                if (this.status.get("status") === "DONE") {
                     this.renderDiagram();
-                } else if (this.modelOID) {
-                    if (this.modelOID !== this.model.get("oid")) {
-                        this.renderDiagram();
-                        this.modelOID = this.model.get("oid");
-                    }
                 }
             }
         },
@@ -159,20 +154,23 @@
 
             // iterate through all domains dimensions
             var domain = squid_api.utils.find(squid_api.model.project.get("domains"), "oid", squid_api.model.config.get("domain"), "Domain");
-            var domainMetrics = domain.metrics;
 
-            for (i=0; i<domainMetrics.length; i++) {
-                if (domainMetrics[i].id.metricId === selectedMetric) {
-                    selectedMetric = domainMetrics[i].name;
+            if (domain) {
+                var domainMetrics = domain.metrics;
+
+                for (i=0; i<domainMetrics.length; i++) {
+                    if (domainMetrics[i].id.metricId === selectedMetric) {
+                        selectedMetric = domainMetrics[i].name;
+                    }
                 }
-            }
 
-            if (this.additionalMetricPresent) {
-                data = {"additionalMetric" : selectedMetric};
-            }
+                if (this.additionalMetricPresent) {
+                    data = {"additionalMetric" : selectedMetric};
+                }
 
-            var html = this.columnsTemplate(data);
-            this.$el.find(".pathanalysis_columns").html(html);
+                var html = this.columnsTemplate(data);
+                this.$el.find(".pathanalysis_columns").html(html);
+            }
         },
 
         getData: function() {
@@ -194,7 +192,7 @@
                 if (this.additionalMetricPresent) {
                     metricCount = this.metricAnalysis.get("results").rows[0].v[0];
                 }
-                
+
                 var objects = [];
 
                 for (i=0; i<rows.length; i++) {
@@ -219,10 +217,10 @@
                     if (noTimeCount === stepsInserted) {
                         noTimesAvailable = true;
                     }
-                    
+
                     var dataValues = {};
                     dataValues.data = [];
-                    
+
                     var obj;
                     // If only 1 step without value, put 100%
                     if (noTimesAvailable) {
@@ -259,13 +257,13 @@
                                 if (rowItem[ix].length === 0 && rowItem[ix - stepsInserted] !== 0) {
                                     obj.lastNoValue = true;
                                 } else if (ix === (stepsInserted * 2) - 1) {
-                                    obj.lastValue = true; 
+                                    obj.lastValue = true;
                                 }
 
                                 dataValues.data.push(obj);
                             }
                         }
-                        // To Fix Display percentages not equalling 100 
+                        // To Fix Display percentages not equalling 100
                         if (percentages !== 100) {
                             var newArray = [];
                             var missingPercentage = 100 - percentages;
@@ -289,7 +287,7 @@
                             }
                         }
                     }
-                    
+
                     dataValues.average = timeSum;
                     dataValues.percentage = rowItem[stepsInserted * 2] / totalCount * 100;
 
@@ -320,7 +318,7 @@
                     return (b.metricPercentage - a.metricPercentage);
                 });
             }
-            
+
             return values;
         },
 
@@ -333,11 +331,11 @@
             var originalColumnsHeight = $(window).height() - 248;
             this.$el.find(".pathanalysis_columns").height(originalColumnsHeight);
             this.$el.find(".pathanalysis_columns").attr("originalHeight", originalColumnsHeight);
-            
+
             d3.select("#squid_api_pathanalysis_widget .pathanalysis_diagram svg").remove();
 
             var margin = { top: 0, left: 23, right: 175, bottom: 0 };
-            
+
             this.columnUpdate();
 
             if (this.additionalMetricPresent) {
@@ -348,7 +346,7 @@
             }
 
             var w = width - margin.left - margin.right;
-            
+
 
             // Format Data for Display
             var formattedArray = [];
@@ -360,7 +358,7 @@
                     path.average = data[i].average;
                     path.percentage = data[i].percentage;
                     if (data[i].metricPercentage) {
-                       path.metricPercentage = data[i].metricPercentage; 
+                       path.metricPercentage = data[i].metricPercentage;
                     }
                     path.values = [];
                     for (ix=0; ix<pathData.length; ix++) {
@@ -397,7 +395,7 @@
 
                 //Set up scales
                 var xScale = d3.scale.linear()
-                    .domain([0, d3.max(formattedArray, function (dataset) {      
+                    .domain([0, d3.max(formattedArray, function (dataset) {
                         return d3.max(dataset.values, function (d) {
                             return d3.max(d, function (d) {
                                 return d.y0 + d.y;
@@ -437,7 +435,7 @@
 
                             if (d.lastNoValue === true) {
                                 jsonData.lastNoValue = true;
-                            } else if (d.lastValue === true) { 
+                            } else if (d.lastValue === true) {
                                 jsonData.lastValue = true;
                             }
 
@@ -455,7 +453,7 @@
 
                             // Obtain Step Number
                             jsonData.number = (d.number) + 1;
-                            
+
                             return me.tooltipTemplate(jsonData);
                         });
 
@@ -469,8 +467,8 @@
                         .append("g")
                         .attr("class", "toplevel")
                         .attr("firstYPosition", function(d, i ) {return (i * 75); })
-                        .attr("transform", function(d, i ) {return "translate(0, " + (i * 75) + ")"; });   
-            
+                        .attr("transform", function(d, i ) {return "translate(0, " + (i * 75) + ")"; });
+
                     // Append add icon for each path
                     var addIconGroup = topLevelGroup
                         .append("g")
@@ -495,7 +493,7 @@
                             "rx" : "10",
                             "ry" : "10",
                         });
-                    
+
                     var addIconText = addIconGroup
                         .filter(function(d, i) {
                             if (d.values.length > 1) {
@@ -560,7 +558,7 @@
                                 return "#000";
                             }
                         });
-                    
+
                     // Add Column Data
                     var columnDataGroup = topLevelGroup.append("g")
                         .attr("class", "data-column");
@@ -646,7 +644,7 @@
                         .filter(function(d) {
                             if (d.lastNoValue === true) {
                                 return d.lastNoValue;
-                            } else if (d.lastValue === true) { 
+                            } else if (d.lastValue === true) {
                                 return d.lastValue;
                             }  else {
                                 this.remove();
@@ -668,7 +666,7 @@
                         .style({"display": "none"});
 
                         var xPosition = stepElements
-                            .attr('x', function(d) { 
+                            .attr('x', function(d) {
                                 return xScale(d.y0);
                             })
                             .attr("width", function (d) {
@@ -731,7 +729,7 @@
                             .attr("fill", function (d) {
                                 if (me.metadata[d.name]) {
                                     var color = me.metadata[d.name].color;
-                                    
+
                                     // obtain each RGB colour seperately
                                     color = color.substring(4, color.length-1)
                                             .replace(/ /g, '')
@@ -748,7 +746,7 @@
                                     return "white";
                                 }
                             });
-                        
+
                         texts.append("text")
                             .text(function(d) {
                                 var nodeSizing = this.parentNode.childNodes[0].getBoundingClientRect();
@@ -782,7 +780,7 @@
                                 var nodeSizing = this.parentNode.childNodes[0].getBoundingClientRect();
                                 if (this.getBBox().width < 100) {
                                     return xScale(d.y0) + (nodeSizing.width / 2) - (this.getBBox().width / 2);
-                                } 
+                                }
                             })
                             .attr("y", function (d) {
                                 return 30;
@@ -790,7 +788,7 @@
                             .attr("fill", function (d) {
                                 if (me.metadata[d.name]) {
                                     var color = me.metadata[d.name].color;
-                                    
+
                                     // obtain each RGB colour seperately
                                     color = color.substring(4, color.length-1)
                                             .replace(/ /g, '')
@@ -807,7 +805,7 @@
                                     return "white";
                                 }
                             });
-                        
+
                         // Text value only shown in waterwall
                         texts.append("text")
                             .text(function(d) {
@@ -876,7 +874,7 @@
 
             // Get Children
             var children = [];
-            for (i=0; i<nodesToAnimate.length; i++) {  
+            for (i=0; i<nodesToAnimate.length; i++) {
                 children.push(nodesToAnimate[i].childNodes);
             }
 
@@ -893,7 +891,7 @@
                 if (! node.hasAttribute("expanded")) {
 
                 // Expand Path to Waterfall
-                    
+
                     // Change Icon Text
                     d3.select(node).select('text')
                         .text(function(d){
@@ -919,7 +917,7 @@
                         Node Length of 5 = Node Items with a SVG Path attribute
                         Node Length of 2 = Text Column Attributes on the Right of Page
                         Node Length of 3 = Text Columns Attributes on the Right of Page when we use an additional metric
-                        Node Length of (other quantity) = All other node types           
+                        Node Length of (other quantity) = All other node types
                     */
                     for (ix=0; ix<children.length; ix++) {
                         var yValue1 = 50 * ix;
@@ -937,7 +935,7 @@
                                 .duration(500)
                                 .ease('esp')
                                 .style({"display": "inherit"});
-                           
+
                          } else if (children[ix].length !== 2 && children[ix].length !== 3) {
                             // order for all other tag orders
                             entitiesHeight = entitiesHeight + 50;
@@ -999,7 +997,7 @@
                             Node Length of 5 = Node Items with a SVG Path attribute
                             Node Length of 2 = Text Column Attributes on the Right of Page
                             Node Length of 3 = Text Columns Attributes on the Right of Page when we use an additional metric
-                            Node Length of (other quantity) = All other node types           
+                            Node Length of (other quantity) = All other node types
                         */
                         if (children[ix].length === 5) {
                             entitiesHeight = entitiesHeight + 50;
@@ -1040,7 +1038,7 @@
                                 .style({"display": "none"});
                         }
                     }
-                    
+
                     // Page Height Logic For WaterFall Expand
                     d3.select("#squid_api_pathanalysis_widget svg").attr("height", svgHeight - entitiesHeight - 50);
                     $("#squid-widgets-wrapper").height(widgetsWrapperHeight - entitiesHeight - 50);
