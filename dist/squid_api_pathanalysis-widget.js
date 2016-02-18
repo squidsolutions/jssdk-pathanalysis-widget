@@ -220,10 +220,6 @@ function program3(depth0,data) {
             } else {
                 this.additionalMetricPresent = false;
             }
-            console.log(this.model.isDone());
-            console.log(this.total.isDone());
-            console.log(this.metricAnalysis);
-            console.log(this.metricAnalysis.isDone());
 
             if (!this.model.isDone() || !this.total.isDone() || (this.metricAnalysis && !this.metricAnalysis.isDone())) {
                 // running
