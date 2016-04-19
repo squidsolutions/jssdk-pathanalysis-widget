@@ -298,7 +298,7 @@ function program3(depth0,data) {
                     var labelItem;
                     for (ix=stepsInserted; ix<stepsInserted * 2; ix++) {
                         if (ix < (stepsInserted * 2)) {
-                            if (rowItem[ix].length === 0) {
+                            if (! rowItem[ix]) {
                                 noTimeCount++;
                             } else {
                                 timeSum = timeSum + parseFloat(rowItem[ix]);
@@ -328,13 +328,13 @@ function program3(depth0,data) {
                         var percentages = 0;
                         for (ix=stepsInserted; ix<stepsInserted * 2; ix++) {
                             obj = {};
-                            if (rowItem[ix].length !== 0 || rowItem[ix - stepsInserted].length !== 0 && rowItem[ix].length === 0) {
+                            if (rowItem[ix] || rowItem[ix - stepsInserted] && ! rowItem[ix]) {
                                 obj.time = 0;
-                                if (rowItem[ix].length !== 0) {
+                                if (rowItem[ix]) {
                                     obj.time = parseFloat(rowItem[ix]);
                                 }
                                 obj.realPercentage = parseFloat(obj.time / timeSum * 100);
-                                if (rowItem[ix - stepsInserted].length !== 0) {
+                                if (rowItem[ix - stepsInserted]) {
                                     obj.stepname = rowItem[ix - stepsInserted].trim();
                                 } else {
                                     obj.stepname = "Unknown";
@@ -347,7 +347,7 @@ function program3(depth0,data) {
                                 }
                                 percentages = percentages + obj.displayPercentage;
 
-                                if (rowItem[ix].length === 0 && rowItem[ix - stepsInserted] !== 0) {
+                                if (! rowItem[ix] && rowItem[ix - stepsInserted]) {
                                     obj.lastNoValue = true;
                                 } else if (ix === (stepsInserted * 2) - 1) {
                                     obj.lastValue = true;
